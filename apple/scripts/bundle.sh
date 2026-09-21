@@ -7,8 +7,16 @@ cd "$ROOT"
 APP_NAME="YikzClipboard"
 DISPLAY_NAME="Yikz Clipboard"
 BUNDLE_ID="dev.yikz.clipboard"
-VERSION="$(tr -d '[:space:]' < VERSION)"
-BUILD_NUMBER="${BUILD_NUMBER:-$(git rev-list --count HEAD 2>/dev/null || echo 1)}"
+REPO_ROOT="$(cd "$ROOT/.." && pwd)"
+VERSION="$(tr -d '[:space:]' < "$REPO_ROOT/VERSION")"
+if ! [[ "$VERSION" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+    echo "invalid VERSION: $VERSION" >&2
+    exit 1
+fi
+BUILD_NUMBER="$((10#${BASH_REMATCH[1]} * 10000 + 10#${BASH_REMATCH[2]} * 100 + 10#${BASH_REMATCH[3]}))"
+LOCAL_SIGNING_DIR="$HOME/.config/yikz-clipboard"
+LOCAL_KEYCHAIN="$LOCAL_SIGNING_DIR/signing.keychain-db"
+LOCAL_IDENTITY="Yikz Clipboard Signing"
 OUT="$ROOT/build"
 APP="$OUT/$APP_NAME.app"
 ZIP="$OUT/$APP_NAME.zip"
@@ -108,12 +116,55 @@ for s in 16 32 128 256 512; do
 done
 iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/AppIcon.icns"
 
-echo "==> Signing (ad-hoc)"
-codesign --force --sign - --timestamp=none \
-    --identifier "$BUNDLE_ID" \
-    --entitlements "$ROOT/scripts/YikzClipboard.entitlements" \
-    "$APP"
-codesign --verify --strict --verbose=1 "$APP"
+SIGN_IDENTITY="${CODESIGN_IDENTITY:-}"
+SIGN_KEYCHAIN="${CODESIGN_KEYCHAIN:-}"
+unlock_local_keychain() {
+    if [ -f "$LOCAL_SIGNING_DIR/signing-keychain-password.txt" ]; then
+        security unlock-keychain -p "$(cat "$LOCAL_SIGNING_DIR/signing-keychain-password.txt")" "$LOCAL_KEYCHAIN" >/dev/null 2>&1 || true
+    fi
+}
+cert_sha1() {
+    local out
+    if [ -n "$2" ]; then
+        out="$(security find-certificate -a -c "$1" -Z "$2" 2>/dev/null || true)"
+    else
+        out="$(security find-certificate -a -c "$1" -Z 2>/dev/null || true)"
+    fi
+    printf '%s\n' "$out" | awk '/SHA-1 hash:/ && !found { print $3; found = 1 }'
+    return 0
+}
+if [ -n "$SIGN_IDENTITY" ] && [ -z "$SIGN_KEYCHAIN" ] && [ -f "$LOCAL_KEYCHAIN" ] && [ -z "$(cert_sha1 "$SIGN_IDENTITY" "")" ]; then
+    SIGN_KEYCHAIN="$LOCAL_KEYCHAIN"
+fi
+if [ -z "$SIGN_IDENTITY" ] && [ -f "$LOCAL_KEYCHAIN" ]; then
+    if [ -n "$(cert_sha1 "$LOCAL_IDENTITY" "$LOCAL_KEYCHAIN")" ]; then
+        SIGN_IDENTITY="$LOCAL_IDENTITY"
+        SIGN_KEYCHAIN="$LOCAL_KEYCHAIN"
+    fi
+fi
+[ "$SIGN_KEYCHAIN" = "$LOCAL_KEYCHAIN" ] && unlock_local_keychain
+
+if [ -n "$SIGN_IDENTITY" ]; then
+    CERT_SHA1="$(cert_sha1 "$SIGN_IDENTITY" "$SIGN_KEYCHAIN" | tr '[:upper:]' '[:lower:]')"
+    [ -n "$CERT_SHA1" ] || { echo "signing identity not found: $SIGN_IDENTITY" >&2; exit 1; }
+    REQUIREMENT="designated => identifier \"$BUNDLE_ID\" and certificate leaf = H\"$CERT_SHA1\""
+    echo "==> Signing with \"$SIGN_IDENTITY\" ($CERT_SHA1)"
+    KEYCHAIN_ARGS=()
+    [ -n "$SIGN_KEYCHAIN" ] && KEYCHAIN_ARGS=(--keychain "$SIGN_KEYCHAIN")
+    codesign --force --sign "$CERT_SHA1" ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --timestamp=none \
+        --identifier "$BUNDLE_ID" \
+        --entitlements "$ROOT/scripts/YikzClipboard.entitlements" \
+        -r="$REQUIREMENT" \
+        "$APP"
+else
+    echo "==> Signing (ad-hoc, no signing identity available)"
+    codesign --force --sign - --timestamp=none \
+        --identifier "$BUNDLE_ID" \
+        --entitlements "$ROOT/scripts/YikzClipboard.entitlements" \
+        "$APP"
+fi
+codesign --verify --deep --strict --verbose=1 "$APP"
+echo "    $(codesign -d -r- "$APP" 2>&1 | grep designated)"
 
 echo "==> Packaging"
 ditto -c -k --sequesterRsrc --keepParent "$APP" "$ZIP"

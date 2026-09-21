@@ -154,10 +154,11 @@ public struct AppPaths: Sendable {
     public var received: URL { caches.appendingPathComponent("received", isDirectory: true) }
     public var temporary: URL { caches.appendingPathComponent("tmp", isDirectory: true) }
     public var outgoing: URL { caches.appendingPathComponent("outgoing", isDirectory: true) }
+    public var updates: URL { caches.appendingPathComponent("updates", isDirectory: true) }
 
     public func prepare() {
         let fm = FileManager.default
-        for dir in [support, caches, received, temporary, outgoing] {
+        for dir in [support, caches, received, temporary, outgoing, updates] {
             try? fm.createDirectory(at: dir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         }
         chmod(support.path, 0o700)

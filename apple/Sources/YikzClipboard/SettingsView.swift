@@ -22,6 +22,22 @@ struct GeneralPane: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
+            Section {
+                Toggle("Show in menu bar", isOn: Binding(
+                    get: { model.settings.showInMenuBar },
+                    set: { AppVisibility.setShowInMenuBar($0) }
+                ))
+                Toggle("Show in Dock", isOn: Binding(
+                    get: { model.settings.showInDock },
+                    set: { AppVisibility.setShowInDock($0) }
+                ))
+            } header: {
+                Text("Appearance")
+            } footer: {
+                Text("With both hidden, press \(model.settings.historyShortcut.display) or open Yikz Clipboard again from Finder or Spotlight to reach it.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
             Section("Permissions") {
                 LabeledContent("Accessibility") {
                     HStack(spacing: 8) {
@@ -61,7 +77,7 @@ struct GeneralPane: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 540, height: 470)
+        .frame(width: 540, height: 560)
         .onAppear { model.refreshSystemState() }
         .onReceive(timer) { _ in model.refreshSystemState() }
     }

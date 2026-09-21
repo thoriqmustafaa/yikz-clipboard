@@ -100,6 +100,13 @@ struct MenuBarView: View {
 
     private var actions: some View {
         VStack(spacing: 1) {
+            if let version = model.updates.readyVersion {
+                MenuActionRow(symbol: "arrow.down.circle.fill", title: "Restart to Update (\(version))", hint: nil) {
+                    close()
+                    model.updates.installNow()
+                }
+                Divider().padding(.vertical, 4).padding(.horizontal, 6)
+            }
             MenuActionRow(symbol: "clock.arrow.circlepath", title: "Open History", hint: model.settings.historyShortcut.display) {
                 close()
                 WindowManager.shared.showHistory()
@@ -116,6 +123,11 @@ struct MenuBarView: View {
             MenuActionRow(symbol: "gearshape", title: "Settings", hint: "\u{2318},") {
                 close()
                 WindowManager.shared.showSettings()
+            }
+            MenuActionRow(symbol: "arrow.triangle.2.circlepath.circle", title: "Check for Updates\u{2026}", hint: nil) {
+                close()
+                model.updates.checkNow()
+                WindowManager.shared.showSettings(tab: .updates)
             }
             MenuActionRow(symbol: "list.bullet.rectangle", title: "Logs", hint: nil) {
                 close()

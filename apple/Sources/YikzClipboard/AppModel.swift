@@ -47,6 +47,7 @@ final class AppModel {
     @ObservationIgnored private(set) var connection: ConnectionManager!
     @ObservationIgnored private var started = false
     @ObservationIgnored let thumbnails = ThumbnailCache()
+    let updates = UpdateController()
 
     var status: ConnectionStatus = .idle
     var syncing = false
@@ -155,6 +156,7 @@ final class AppModel {
         refreshSystemState()
         Task { await engine.updateSettings(settings.engineSettings) }
         restoreSession()
+        updates.start()
     }
 
     func refreshSystemState() {
@@ -269,6 +271,8 @@ final class AppModel {
             Task { await connection.stop() }
         case .syncing(let on):
             syncing = on
+        case .releaseAvailable(let version):
+            updates.releaseAvailable(version)
         }
     }
 

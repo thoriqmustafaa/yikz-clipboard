@@ -187,6 +187,9 @@ public actor SyncEngine {
             emit(.storageWarning(s))
         case .error(let e):
             Log.error("Server error \(e.code): \(e.message)", "ws")
+        case .releaseAvailable(let v):
+            Log.info("Server announced release \(v)", "update")
+            emit(.releaseAvailable(v))
         case .ping, .pong, .unknown:
             break
         }

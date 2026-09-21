@@ -95,6 +95,7 @@ public enum ServerMessage: Sendable, Equatable {
     case ping(Int64)
     case pong(Int64)
     case error(WSErrorMessage)
+    case releaseAvailable(String)
     case unknown(String)
 
     private struct TypeProbe: Decodable {
@@ -103,6 +104,10 @@ public enum ServerMessage: Sendable, Equatable {
 
     private struct TsBody: Decodable {
         var ts: Int64
+    }
+
+    private struct ReleaseBody: Decodable {
+        var version: String?
     }
 
     public static func decode(_ data: Data) throws -> ServerMessage {
@@ -119,6 +124,7 @@ public enum ServerMessage: Sendable, Equatable {
         case "ping": return .ping(try d.decode(TsBody.self, from: data).ts)
         case "pong": return .pong(try d.decode(TsBody.self, from: data).ts)
         case "error": return .error(try d.decode(WSErrorMessage.self, from: data))
+        case "release_available": return .releaseAvailable((try? d.decode(ReleaseBody.self, from: data))?.version ?? "")
         default: return .unknown(type)
         }
     }

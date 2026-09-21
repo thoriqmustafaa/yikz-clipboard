@@ -41,6 +41,10 @@ final class AppSettings {
     var syncFiles: Bool { didSet { defaults.set(syncFiles, forKey: "syncFiles") } }
     var autoDownloadMB: Int { didSet { defaults.set(autoDownloadMB, forKey: "autoDownloadMB") } }
     var paused: Bool { didSet { defaults.set(paused, forKey: "paused") } }
+    var showInMenuBar: Bool { didSet { defaults.set(showInMenuBar, forKey: "showInMenuBar") } }
+    var showInDock: Bool { didSet { defaults.set(showInDock, forKey: "showInDock") } }
+    var autoInstallUpdates: Bool { didSet { defaults.set(autoInstallUpdates, forKey: "autoInstallUpdates") } }
+    var lastUpdateCheck: Date? { didSet { defaults.set(lastUpdateCheck, forKey: "lastUpdateCheck") } }
     var historyShortcut: Shortcut {
         didSet {
             if let d = try? JSONEncoder().encode(historyShortcut) { defaults.set(d, forKey: "historyShortcut") }
@@ -60,6 +64,10 @@ final class AppSettings {
         syncFiles = d.object(forKey: "syncFiles") as? Bool ?? true
         autoDownloadMB = d.object(forKey: "autoDownloadMB") as? Int ?? 50
         paused = d.bool(forKey: "paused")
+        showInMenuBar = d.object(forKey: "showInMenuBar") as? Bool ?? true
+        showInDock = d.object(forKey: "showInDock") as? Bool ?? false
+        autoInstallUpdates = d.object(forKey: "autoInstallUpdates") as? Bool ?? true
+        lastUpdateCheck = d.object(forKey: "lastUpdateCheck") as? Date
         if let data = d.data(forKey: "historyShortcut"), let s = try? JSONDecoder().decode(Shortcut.self, from: data) {
             historyShortcut = s
         } else {

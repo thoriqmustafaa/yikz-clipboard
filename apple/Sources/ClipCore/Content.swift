@@ -178,6 +178,7 @@ public enum EngineEvent: Sendable {
     case keyRejected
     case protocolUnsupported
     case syncing(Bool)
+    case releaseAvailable(String)
 }
 
 public enum SubmitOutcome: Sendable, Equatable {

@@ -6,11 +6,13 @@ on:
     paths:
       - "apple/**"
       - "protocol/**"
+      - "VERSION"
       - ".github/workflows/apple.yml"
   pull_request:
     paths:
       - "apple/**"
       - "protocol/**"
+      - "VERSION"
       - ".github/workflows/apple.yml"
   workflow_dispatch:
 
@@ -40,8 +42,42 @@ jobs:
       - name: Test ClipCore
         run: swift test
 
+      - name: Import signing certificate
+        env:
+          MACOS_CERT_P12_B64: ${{ secrets.MACOS_CERT_P12_B64 }}
+          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+        run: |
+          if [ -z "$MACOS_CERT_P12_B64" ] || [ -z "$MACOS_CERT_PASSWORD" ]; then
+            echo "No signing certificate available, the app will be signed ad-hoc"
+            exit 0
+          fi
+          KEYCHAIN="$RUNNER_TEMP/yikz-signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(openssl rand -hex 16)"
+          echo "$MACOS_CERT_P12_B64" | base64 --decode > "$RUNNER_TEMP/signing.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 3600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/signing.p12" -k "$KEYCHAIN" -P "$MACOS_CERT_PASSWORD" -T /usr/bin/codesign -A
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" >/dev/null
+          rm -f "$RUNNER_TEMP/signing.p12"
+          security find-identity "$KEYCHAIN"
+          echo "CODESIGN_IDENTITY=Yikz Clipboard Signing" >> "$GITHUB_ENV"
+          echo "CODESIGN_KEYCHAIN=$KEYCHAIN" >> "$GITHUB_ENV"
+
       - name: Bundle app
         run: ./scripts/bundle.sh
+
+      - name: Show signature
+        run: |
+          codesign -dv --verbose=2 build/YikzClipboard.app 2>&1 | grep -E "Identifier|Authority|Signature" || true
+          codesign -d -r- build/YikzClipboard.app
+
+      - name: Remove signing keychain
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/yikz-signing.keychain-db" ]; then
+            security delete-keychain "$RUNNER_TEMP/yikz-signing.keychain-db" || true
+          fi
 
       - name: Upload app
         uses: actions/upload-artifact@v4

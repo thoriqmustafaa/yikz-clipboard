@@ -30,6 +30,7 @@ enum SettingsTab: Int {
     case general = 0
     case account = 1
     case sync = 2
+    case updates = 3
 }
 
 @MainActor
@@ -167,6 +168,7 @@ final class WindowManager {
             add(GeneralPane(), "General", "gearshape")
             add(AccountPane(), "Account", "person.crop.circle")
             add(SyncPane(), "Sync", "arrow.triangle.2.circlepath")
+            add(UpdatesPane(), "Updates", "arrow.down.circle")
             let window = NSWindow(contentViewController: tabs)
             window.styleMask = [.titled, .closable, .miniaturizable]
             window.isReleasedWhenClosed = false
@@ -181,6 +183,11 @@ final class WindowManager {
         AppModel.shared.refreshSystemState()
         NSApp.activate()
         settingsWindow?.makeKeyAndOrderFront(nil)
+    }
+
+    func bringSettingsToFront() {
+        guard let window = settingsWindow, window.isVisible else { return }
+        window.makeKeyAndOrderFront(nil)
     }
 
     func showLogs() {
