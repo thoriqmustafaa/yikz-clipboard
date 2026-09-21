@@ -42,7 +42,25 @@ cd android
 
 - `:core` registers a `testDebugUnitTest` task that runs its JVM tests, so the single CI command covers both modules.
 - The vector directory is passed to the tests via the system property `yikz.vectors.dir`, resolved from the Gradle project dir as `../protocol/vectors`.
-- Outputs: `app/build/outputs/apk/debug/app-debug.apk` and `app/build/outputs/apk/release/app-release.apk`. The release build is minified and signed with the debug key so it installs directly.
+- Outputs: `app/build/outputs/apk/debug/app-debug.apk` and `app/build/outputs/apk/release/app-release.apk`. The release build is minified and signed with the release signing config described below.
+
+## Version and signing
+
+- `versionName` is read from the repo root `VERSION` file and `versionCode` is `MAJOR*10000 + MINOR*100 + PATCH` (1.1.0 is 10100), see `../protocol/UPDATES.md` section 1.
+- The release signing config uses `YIKZ_KEYSTORE_FILE`, `YIKZ_KEYSTORE_PASSWORD`, `YIKZ_KEY_ALIAS` and `YIKZ_KEY_PASSWORD` when `YIKZ_KEYSTORE_FILE` is set (the release pipeline sets them). Otherwise it uses `~/.android/debug.keystore` with the default debug credentials (store and key password `android`, alias `androiddebugkey`), which is the key of the APK already installed on the owner's phone. If that file does not exist either (fresh CI runner), it falls back to the AGP debug signing config.
+- Every APK meant for the owner's phone must be signed with that same key (certificate SHA-256 `A9:67:25:08:03:11:D9:5A:B4:1E:C1:D7:75:7D:83:8C:08:1F:43:46:95:1B:51:C8:65:E0:A1:CF:74:8D:70:BD`), otherwise Android refuses the update. Check with `apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk`.
+- CI (`android.yml`) decodes `ANDROID_KEYSTORE_B64` into a temp file on push builds when the secret exists and passes `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD` through; without secrets it still builds and signs with the runner debug key.
+
+## In-app updates
+
+Implements `../protocol/UPDATES.md` section 7.
+
+- `:core` `Updates.kt`: `SemVer` (parse, compare, versionCode), release models, `Releases.parseLatest` (`200` body, `204` or `404` means no release), `UpdatePolicy.decide` (never downgrade, platform must be `android`, sane file name, size, sha256 and signature), `ReleaseVerifier` (SHA-256 of the file, then Ed25519 over the 32 raw digest bytes with the embedded release public key, BouncyCastle lightweight API) and `NotesMarkdown` (the notes subset: `###` headings, `-` bullets, `**bold**`, `` `code` ``, links).
+- `:app` `update/UpdateManager.kt`: checks 10 s after the foreground service starts, then whenever 6 hours have passed (polled every 15 minutes and on screen on or leaving Doze), on the `release_available` WebSocket message and on demand from Settings. It downloads the APK into `cache/updates` with the device token, verifies size, SHA-256, signature, package name and versionCode, and installs it with a `PackageInstaller` session (`USER_ACTION_NOT_REQUIRED` on API 31+, `setRequestUpdateOwnership(true)` on API 34+). A failed verification deletes the file and waits for the next check.
+- When Android still wants a confirmation (`STATUS_PENDING_USER_ACTION`), the confirmation opens directly if the app is in the foreground, otherwise a high-priority notification "Update x.y.z ready, tap to install" opens it. If "Install unknown apps" is off for this app, Settings shows an explanation with a button to `ACTION_MANAGE_UNKNOWN_APP_SOURCES`, and a notification points there when the app is in the background.
+- `BootReceiver` handles `MY_PACKAGE_REPLACED`: it clears the update cache and restarts the foreground service.
+- Settings, Updates: current version, "Automatically install updates" (default on; off only notifies), "Check for updates" with status, last check time, and "What's new" with the latest release notes.
+- Silent installs need this app to be the installer of record. The first update after installing an APK by hand usually still shows one confirmation; later ones install without it.
 - The debug build also runs R8, but only to shrink (`-dontobfuscate`, `-dontoptimize`, see `proguard-debug.pro`). Without it the full Material icon set made the debug APK 66 MB. With it the debug APK is about 11 MB and stack traces stay readable.
 
 CI: `.github/workflows/android.yml` uses Temurin JDK 21, installs `platforms;android-36.1`, runs the same command and uploads both APKs.

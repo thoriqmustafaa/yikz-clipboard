@@ -90,7 +90,7 @@ private val downloadLimits = listOf(
 )
 
 @Composable
-fun SettingsScreen(onOpenLog: () -> Unit) {
+fun SettingsScreen(onOpenLog: () -> Unit, onOpenWhatsNew: () -> Unit) {
     val context = LocalContext.current
     val g = context.graph
     val settings by g.sync.settings.collectAsStateWithLifecycle()
@@ -217,6 +217,8 @@ fun SettingsScreen(onOpenLog: () -> Unit) {
                 }
             }
         }
+
+        UpdatesSection(onOpenWhatsNew = onOpenWhatsNew)
 
         SectionLabel("Diagnostics")
         SettingsCard {

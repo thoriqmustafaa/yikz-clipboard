@@ -11,11 +11,13 @@ import dev.yikz.clipboard.core.HistoryIndex
 import dev.yikz.clipboard.core.HistoryResponse
 import dev.yikz.clipboard.core.ItemHeader
 import dev.yikz.clipboard.core.KeyCheckRequest
+import dev.yikz.clipboard.core.LatestRelease
 import dev.yikz.clipboard.core.LoginRequest
 import dev.yikz.clipboard.core.LoginResponse
 import dev.yikz.clipboard.core.MeResponse
 import dev.yikz.clipboard.core.PinRequest
 import dev.yikz.clipboard.core.ProtocolJson
+import dev.yikz.clipboard.core.Releases
 import dev.yikz.clipboard.core.RenameRequest
 import dev.yikz.clipboard.core.StorageInfo
 import dev.yikz.clipboard.core.SyncApi
@@ -202,6 +204,33 @@ class HttpApi(private val baseUrl: HttpUrl, private val token: () -> String?) : 
     }
 
     override suspend fun storage(): StorageInfo = json(request("api/storage").get().build(), StorageInfo.serializer())
+
+    suspend fun latestRelease(platform: String): LatestRelease? {
+        val response = execute(request("api/releases/latest", mapOf("platform" to platform)).get().build())
+        response.use {
+            val body = try {
+                it.body.string()
+            } catch (e: IOException) {
+                throw ApiException(0, "network", e.message ?: "network error", cause = e)
+            }
+            if (!it.isSuccessful && it.code != 404) throw toError(it, body.toByteArray(Charsets.UTF_8))
+            return Releases.parseLatest(it.code, body)
+        }
+    }
+
+    suspend fun openAsset(path: String): Response {
+        val response = execute(request(path).get().build())
+        if (!response.isSuccessful) {
+            val body = try {
+                response.body.bytes()
+            } catch (_: IOException) {
+                ByteArray(0)
+            }
+            response.close()
+            throw toError(response, body)
+        }
+        return response
+    }
 
     override suspend fun logout() {
         raw(request("api/logout").post(ByteArray(0).toRequestBody(null)).build())

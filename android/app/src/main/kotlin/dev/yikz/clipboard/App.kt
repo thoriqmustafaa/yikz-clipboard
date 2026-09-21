@@ -15,6 +15,7 @@ import dev.yikz.clipboard.sync.ContentStore
 import dev.yikz.clipboard.sync.Notifications
 import dev.yikz.clipboard.sync.SyncController
 import dev.yikz.clipboard.sync.Thumbnails
+import dev.yikz.clipboard.update.UpdateManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -48,6 +49,7 @@ class AppGraph(val app: Application) {
     val content = ContentStore(app, db)
     val thumbnails = Thumbnails(app)
     val sync = SyncController(this)
+    val updates = UpdateManager(this)
 }
 
 val Context.graph: AppGraph get() = (applicationContext as App).graph

@@ -3,6 +3,20 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+val productVersion: String = rootProject.layout.projectDirectory.file("../VERSION").asFile.readText().trim()
+val productVersionCode: Int = run {
+    val parts = Regex("^(\\d+)\\.(\\d+)\\.(\\d+)$").matchEntire(productVersion)?.groupValues
+        ?: throw GradleException("VERSION must be MAJOR.MINOR.PATCH, got '$productVersion'")
+    val (major, minor, patch) = parts.drop(1).map { it.toInt() }
+    if (minor > 99 || patch > 99) throw GradleException("VERSION minor and patch must be below 100 for versionCode")
+    major * 10000 + minor * 100 + patch
+}
+
+fun env(name: String): String? = providers.environmentVariable(name).orNull?.takeIf { it.isNotBlank() }
+
+val releaseKeystorePath: String? = env("YIKZ_KEYSTORE_FILE")
+val localDebugKeystore = File(System.getProperty("user.home"), ".android/debug.keystore")
+
 android {
     namespace = "dev.yikz.clipboard"
     compileSdk {
@@ -15,9 +29,27 @@ android {
         applicationId = "dev.yikz.clipboard"
         minSdk = 29
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = productVersionCode
+        versionName = productVersion
         buildConfigField("String", "DEFAULT_SERVER_URL", "\"https://clip.yikz.dev\"")
+    }
+
+    signingConfigs {
+        create("release") {
+            if (releaseKeystorePath != null) {
+                val keystore = file(releaseKeystorePath)
+                if (!keystore.isFile) throw GradleException("YIKZ_KEYSTORE_FILE points to a missing file: $releaseKeystorePath")
+                storeFile = keystore
+                storePassword = env("YIKZ_KEYSTORE_PASSWORD") ?: throw GradleException("YIKZ_KEYSTORE_PASSWORD is not set")
+                keyAlias = env("YIKZ_KEY_ALIAS") ?: throw GradleException("YIKZ_KEY_ALIAS is not set")
+                keyPassword = env("YIKZ_KEY_PASSWORD") ?: throw GradleException("YIKZ_KEY_PASSWORD is not set")
+            } else {
+                storeFile = localDebugKeystore
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
+        }
     }
 
     buildTypes {
@@ -29,7 +61,11 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (releaseKeystorePath != null || localDebugKeystore.isFile) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 

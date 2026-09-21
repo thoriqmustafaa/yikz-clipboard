@@ -74,6 +74,9 @@ data class StorageWarningMsg(
 ) : WsMessage
 
 @Serializable
+data class ReleaseAvailableMsg(val type: String = "release_available", val version: String) : WsMessage
+
+@Serializable
 data class PingMsg(val type: String = "ping", val ts: Long) : WsMessage
 
 @Serializable
@@ -110,6 +113,7 @@ object WsCodec {
                 "clip_deleted" -> ProtocolJson.decodeFromJsonElement(ClipDeletedMsg.serializer(), obj)
                 "clip_pinned" -> ProtocolJson.decodeFromJsonElement(ClipPinnedMsg.serializer(), obj)
                 "storage_warning" -> ProtocolJson.decodeFromJsonElement(StorageWarningMsg.serializer(), obj)
+                "release_available" -> ProtocolJson.decodeFromJsonElement(ReleaseAvailableMsg.serializer(), obj)
                 "ping" -> ProtocolJson.decodeFromJsonElement(PingMsg.serializer(), obj)
                 "pong" -> ProtocolJson.decodeFromJsonElement(PongMsg.serializer(), obj)
                 "error" -> ProtocolJson.decodeFromJsonElement(ErrorMsg.serializer(), obj)
@@ -133,6 +137,7 @@ object WsCodec {
         is ClipPinnedMsg -> ProtocolJson.encodeToString(ClipPinnedMsg.serializer(), message)
         is StorageWarningMsg -> ProtocolJson.encodeToString(StorageWarningMsg.serializer(), message)
         is ErrorMsg -> ProtocolJson.encodeToString(ErrorMsg.serializer(), message)
+        is ReleaseAvailableMsg -> ProtocolJson.encodeToString(ReleaseAvailableMsg.serializer(), message)
         is UnknownMsg, is InvalidMsg -> throw IllegalArgumentException("cannot encode $message")
     }
 }

@@ -24,6 +24,8 @@ jobs:
     defaults:
       run:
         working-directory: android
+    env:
+      HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_B64 != '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -37,8 +39,41 @@ jobs:
       - name: Install Android SDK packages
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36.1" "build-tools;36.1.0" "platform-tools" > /dev/null
 
+      - name: Decode release keystore
+        if: github.event_name != 'pull_request' && env.HAS_KEYSTORE == 'true'
+        env:
+          ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          keystore="$RUNNER_TEMP/yikz-release.keystore"
+          if printf '%s' "$ANDROID_KEYSTORE_B64" | base64 --decode > "$keystore" && [ -s "$keystore" ]; then
+            echo "YIKZ_KEYSTORE_FILE=$keystore" >> "$GITHUB_ENV"
+            echo "Release keystore decoded"
+          else
+            rm -f "$keystore"
+            echo "::warning::ANDROID_KEYSTORE_B64 could not be decoded, the release APK is signed with the runner debug key"
+          fi
+
+      - name: Signing mode
+        run: |
+          if [ -n "${YIKZ_KEYSTORE_FILE:-}" ]; then
+            echo "Release APK is signed with the project keystore"
+          else
+            echo "::notice::No keystore secrets available, the release APK is signed with the runner debug key and cannot update installed builds"
+          fi
+
       - name: Test and build
+        env:
+          YIKZ_KEYSTORE_PASSWORD: ${{ env.YIKZ_KEYSTORE_FILE != '' && secrets.ANDROID_KEYSTORE_PASSWORD || '' }}
+          YIKZ_KEY_ALIAS: ${{ env.YIKZ_KEYSTORE_FILE != '' && secrets.ANDROID_KEY_ALIAS || '' }}
+          YIKZ_KEY_PASSWORD: ${{ env.YIKZ_KEYSTORE_FILE != '' && secrets.ANDROID_KEY_PASSWORD || '' }}
         run: ./gradlew --no-daemon testDebugUnitTest assembleDebug assembleRelease
+
+      - name: Print release signing certificate
+        run: '"$ANDROID_HOME/build-tools/36.1.0/apksigner" verify --print-certs app/build/outputs/apk/release/app-release.apk | grep -E "certificate (DN|SHA-256)"'
+
+      - name: Remove release keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/yikz-release.keystore"
 
       - name: Upload test reports
         if: failure()

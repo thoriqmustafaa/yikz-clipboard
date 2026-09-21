@@ -47,6 +47,7 @@ import dev.yikz.clipboard.ui.screens.DevicesScreen
 import dev.yikz.clipboard.ui.screens.HistoryScreen
 import dev.yikz.clipboard.ui.screens.OnboardingFlow
 import dev.yikz.clipboard.ui.screens.SettingsScreen
+import dev.yikz.clipboard.ui.screens.WhatsNewScreen
 import dev.yikz.clipboard.ui.theme.YikzTheme
 
 class MainActivity : ComponentActivity() {
@@ -82,6 +83,10 @@ private fun Root() {
     }
 }
 
+private const val OVERLAY_NONE = ""
+private const val OVERLAY_LOG = "log"
+private const val OVERLAY_WHATS_NEW = "whats_new"
+
 private data class Tab(val label: String, val selected: ImageVector, val unselected: ImageVector)
 
 private val tabs = listOf(
@@ -93,21 +98,24 @@ private val tabs = listOf(
 @Composable
 private fun MainScaffold() {
     var tab by rememberSaveable { mutableIntStateOf(0) }
-    var showLog by rememberSaveable { mutableStateOf(false) }
+    var overlay by rememberSaveable { mutableStateOf(OVERLAY_NONE) }
     AnimatedContent(
-        targetState = showLog,
+        targetState = overlay,
         transitionSpec = {
-            if (targetState) {
+            if (targetState != OVERLAY_NONE) {
                 (slideInHorizontally { it / 3 } + fadeIn()) togetherWith fadeOut()
             } else {
                 fadeIn() togetherWith (slideOutHorizontally { it / 3 } + fadeOut())
             }
         },
-        label = "log",
-    ) { logVisible ->
-        if (logVisible) {
-            BackHandler { showLog = false }
-            ActivityLogScreen(onBack = { showLog = false })
+        label = "overlay",
+    ) { current ->
+        if (current == OVERLAY_LOG) {
+            BackHandler { overlay = OVERLAY_NONE }
+            ActivityLogScreen(onBack = { overlay = OVERLAY_NONE })
+        } else if (current == OVERLAY_WHATS_NEW) {
+            BackHandler { overlay = OVERLAY_NONE }
+            WhatsNewScreen(onBack = { overlay = OVERLAY_NONE })
         } else {
             BackHandler(enabled = tab != 0) { tab = 0 }
             Scaffold(
@@ -130,12 +138,15 @@ private fun MainScaffold() {
                     transitionSpec = { fadeIn() togetherWith fadeOut() },
                     modifier = Modifier.padding(bottom = padding.calculateBottomPadding()),
                     label = "tab",
-                ) { current ->
+                ) { selectedTab ->
                     Box(Modifier.fillMaxSize()) {
-                        when (current) {
+                        when (selectedTab) {
                             0 -> HistoryScreen()
                             1 -> DevicesScreen()
-                            else -> SettingsScreen(onOpenLog = { showLog = true })
+                            else -> SettingsScreen(
+                                onOpenLog = { overlay = OVERLAY_LOG },
+                                onOpenWhatsNew = { overlay = OVERLAY_WHATS_NEW },
+                            )
                         }
                     }
                 }

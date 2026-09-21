@@ -175,6 +175,10 @@ class SyncController(private val g: AppGraph) {
         override fun onApplied(item: CachedItem) {
             log.i("sync", "applied ${item.kind} from ${deviceName(item.deviceId)} to clipboard")
         }
+
+        override fun onReleaseAvailable(version: String) {
+            g.updates.onReleaseAvailable(version)
+        }
     }
 
     private val connectionCallbacks = object : ConnectionCallbacks {

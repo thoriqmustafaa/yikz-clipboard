@@ -37,6 +37,7 @@ interface SyncCallbacks {
     fun onStorageWarning(message: StorageWarningMsg) {}
     fun onDevicesChanged() {}
     fun onApplied(item: CachedItem) {}
+    fun onReleaseAvailable(version: String) {}
 }
 
 class SyncEngine(
@@ -101,6 +102,7 @@ class SyncEngine(
             is ClipPinnedMsg -> onPinned(message)
             is StorageWarningMsg -> callbacks.onStorageWarning(message)
             is DevicesChangedMsg -> callbacks.onDevicesChanged()
+            is ReleaseAvailableMsg -> callbacks.onReleaseAvailable(message.version)
             else -> Unit
         }
     }

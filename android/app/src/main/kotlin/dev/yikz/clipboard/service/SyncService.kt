@@ -18,10 +18,12 @@ import androidx.core.content.ContextCompat
 import dev.yikz.clipboard.core.ConnectionState
 import dev.yikz.clipboard.graph
 import dev.yikz.clipboard.sync.Notifications
+import dev.yikz.clipboard.update.UpdateTrigger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -58,6 +60,14 @@ class SyncService : Service() {
                     }
                 }
                 if (state is ConnectionState.Blocked) g.log.w("service", "connection blocked: ${state.reason}")
+            }
+        }
+        scope.launch {
+            delay(UPDATE_START_DELAY_MS)
+            g.updates.check(UpdateTrigger.STARTUP)
+            while (true) {
+                delay(UPDATE_POLL_MS)
+                if (g.updates.isDue()) g.updates.check(UpdateTrigger.PERIODIC)
             }
         }
         scope.launch {
@@ -153,12 +163,16 @@ class SyncService : Service() {
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 when (intent.action) {
-                    Intent.ACTION_SCREEN_ON -> graph.sync.onDeviceWake()
+                    Intent.ACTION_SCREEN_ON -> {
+                        graph.sync.onDeviceWake()
+                        graph.updates.checkIfDue()
+                    }
                     PowerManager.ACTION_DEVICE_IDLE_MODE_CHANGED -> {
                         val pm = getSystemService(PowerManager::class.java)
                         if (!pm.isDeviceIdleMode) {
                             graph.log.i("service", "left doze")
                             graph.sync.onDeviceWake()
+                            graph.updates.checkIfDue()
                         }
                     }
                 }
@@ -205,6 +219,8 @@ class SyncService : Service() {
         const val ACTION_DOWNLOAD = "dev.yikz.clipboard.action.DOWNLOAD"
         const val ACTION_RECONNECT = "dev.yikz.clipboard.action.RECONNECT"
         const val EXTRA_ID = "id"
+        private const val UPDATE_START_DELAY_MS = 10_000L
+        private const val UPDATE_POLL_MS = 15L * 60 * 1000
 
         fun start(context: Context, action: String? = null) {
             val intent = Intent(context, SyncService::class.java).setAction(action)

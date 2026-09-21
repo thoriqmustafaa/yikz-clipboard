@@ -40,9 +40,13 @@ class JsonVectorsTest {
             "error_unknown_type" to ErrorMsg::class,
             "error_invalid_message" to ErrorMsg::class,
             "error_not_ready" to ErrorMsg::class,
+            "release_available" to ReleaseAvailableMsg::class,
         )
+        val optionalMessages = setOf("release_available")
         val messages = ws.arr("messages").map { it.o() }
-        assertEquals(expected.keys, messages.map { it.str("name") }.toSet())
+        val names = messages.map { it.str("name") }.toSet()
+        assertTrue(names.all { it in expected })
+        assertEquals(expected.keys - optionalMessages, names - optionalMessages)
         for (m in messages) {
             val name = m.str("name")
             val json = m.obj("message")

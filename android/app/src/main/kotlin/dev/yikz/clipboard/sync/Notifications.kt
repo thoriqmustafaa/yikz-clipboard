@@ -38,6 +38,9 @@ class Notifications(private val context: Context) {
                 NotificationChannel(CHANNEL_ALERTS, "Alerts", NotificationManager.IMPORTANCE_DEFAULT).apply {
                     description = "Sign-in problems and storage warnings"
                 },
+                NotificationChannel(CHANNEL_UPDATES, "App updates", NotificationManager.IMPORTANCE_HIGH).apply {
+                    description = "New versions of Yikz Clipboard ready to install"
+                },
             ),
         )
     }
@@ -195,6 +198,54 @@ class Notifications(private val context: Context) {
         post(id, notification)
     }
 
+    fun updateReady(id: Int, version: String, confirm: Intent) {
+        val intent = PendingIntent.getActivity(context, 20, confirm, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val notification = NotificationCompat.Builder(context, CHANNEL_UPDATES)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle("Update $version ready, tap to install")
+            .setContentText("Downloaded and verified. Android asks you to confirm the install.")
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
+            .setAutoCancel(true)
+            .setContentIntent(intent)
+            .addAction(0, "Install", intent)
+            .build()
+        post(id, notification)
+    }
+
+    fun updateAvailable(id: Int, version: String) {
+        val notification = NotificationCompat.Builder(context, CHANNEL_UPDATES)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle("Update $version available")
+            .setContentText("Open Settings in Yikz Clipboard to install it.")
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
+            .setAutoCancel(true)
+            .setContentIntent(openApp())
+            .build()
+        post(id, notification)
+    }
+
+    fun updatePermission(id: Int, version: String, settings: Intent) {
+        val intent = PendingIntent.getActivity(
+            context,
+            21,
+            settings.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        val text = "Update $version is ready. Allow Yikz Clipboard to install apps once, then updates install by themselves."
+        val notification = NotificationCompat.Builder(context, CHANNEL_UPDATES)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle("Allow installing updates")
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(intent)
+            .build()
+        post(id, notification)
+    }
+
     private fun describe(item: CachedItem): String {
         val meta = item.meta
         return when (item.kind) {
@@ -208,6 +259,7 @@ class Notifications(private val context: Context) {
         const val CHANNEL_STATUS = "status"
         const val CHANNEL_TRANSFERS = "transfers"
         const val CHANNEL_ALERTS = "alerts"
+        const val CHANNEL_UPDATES = "updates"
         const val STATUS_ID = 1
         const val ALERT_SIGNED_OUT = 2
         const val ALERT_STORAGE = 3

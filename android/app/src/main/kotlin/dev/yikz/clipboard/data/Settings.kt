@@ -30,6 +30,8 @@ data class AppSettings(
     val autoDownloadBytes: Long = Protocol.DEFAULT_AUTO_DOWNLOAD_BYTES,
     val autoMode: Boolean = false,
     val onboarded: Boolean = false,
+    val autoInstallUpdates: Boolean = true,
+    val lastUpdateCheckMs: Long = 0,
 ) {
     fun kindEnabled(kind: String): Boolean = when (kind) {
         Kind.TEXT -> syncText
@@ -53,6 +55,8 @@ class SettingsStore(private val context: Context) {
         val autoDownload = longPreferencesKey("auto_download_bytes")
         val autoMode = booleanPreferencesKey("auto_mode")
         val onboarded = booleanPreferencesKey("onboarded")
+        val autoInstallUpdates = booleanPreferencesKey("auto_install_updates")
+        val lastUpdateCheck = longPreferencesKey("last_update_check_ms")
     }
 
     val flow: Flow<AppSettings> = context.dataStore.data.map { p ->
@@ -69,6 +73,8 @@ class SettingsStore(private val context: Context) {
             autoDownloadBytes = p[Keys.autoDownload] ?: Protocol.DEFAULT_AUTO_DOWNLOAD_BYTES,
             autoMode = p[Keys.autoMode] ?: false,
             onboarded = p[Keys.onboarded] ?: false,
+            autoInstallUpdates = p[Keys.autoInstallUpdates] ?: true,
+            lastUpdateCheckMs = p[Keys.lastUpdateCheck] ?: 0,
         )
     }
 
@@ -92,6 +98,8 @@ class SettingsStore(private val context: Context) {
     suspend fun setAutoDownload(value: Long) = context.dataStore.edit { it[Keys.autoDownload] = value }
     suspend fun setAutoMode(value: Boolean) = context.dataStore.edit { it[Keys.autoMode] = value }
     suspend fun setOnboarded(value: Boolean) = context.dataStore.edit { it[Keys.onboarded] = value }
+    suspend fun setAutoInstallUpdates(value: Boolean) = context.dataStore.edit { it[Keys.autoInstallUpdates] = value }
+    suspend fun setLastUpdateCheck(value: Long) = context.dataStore.edit { it[Keys.lastUpdateCheck] = value }
 
     suspend fun clearAccount() {
         context.dataStore.edit {
