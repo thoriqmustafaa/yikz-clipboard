@@ -1,0 +1,8 @@
+{
+  "description": "Ed25519 signature over the 32 raw bytes of SHA-256(file)",
+  "private_key_seed_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "public_key_b64": "A6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=",
+  "file_b64": "eWlrei1jbGlwYm9hcmQgcmVsZWFzZSBhcnRpZmFjdCB0ZXN0Cg==",
+  "sha256_hex": "979c9f8f4fa29fe42adad7a79ccba083a4ee7faf2d9b8d22a26b0097dc08df60",
+  "signature_b64": "GQaoiK5wfcLPxW5w9GLFrOODSd0KRdG3ga9/iT0jQX0LXdPXcr1S3Ud231ebMyxNSTWlh6PCPyFq/F5BSU5PAg=="
+}
