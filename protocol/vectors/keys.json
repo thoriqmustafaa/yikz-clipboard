@@ -1,0 +1,47 @@
+{
+  "description": "Subkeys derived from the 32-byte master key K. content_hash_key = HMAC-SHA256(K, UTF-8 \"yikz-clipboard/v1/content-hash\"). key_check = lowercase hex of HMAC-SHA256(K, UTF-8 \"yikz-clipboard/v1/key-check\"). content_hash = lowercase hex of HMAC-SHA256(content_hash_key, content plaintext bytes).",
+  "content_hash_label_utf8": "yikz-clipboard/v1/content-hash",
+  "key_check_label_utf8": "yikz-clipboard/v1/key-check",
+  "keys": [
+    {
+      "name": "primary",
+      "key_hex": "445b4a046c63fd1e1aa196088b1b75665ecba3d831addb5bf5a9908236767294",
+      "content_hash_key_hex": "a06e469e09b00264cecf3dd5ad9e2f82ce1732c84226c44cd2a1a707e60bece5",
+      "key_check": "41f6d0b7f5e8d491269b90fc8988b2f48757f7a48baaeb9129da7ea9bb427e93",
+      "content_hash_samples": [
+        {
+          "content_utf8": "Hello from yikz-clipboard 👋\nSecond line.",
+          "content_hex": "48656c6c6f2066726f6d2079696b7a2d636c6970626f61726420f09f918b0a5365636f6e64206c696e652e",
+          "content_hash": "290c70322c58faf004eec4c41a380b481cdaa8eee960b518d4a52798d4a77bce",
+          "sha256": "f418a39d506b740c116fe3ecf5580a80561e265c3e92174b33b9d3efe0c435a9"
+        },
+        {
+          "content_utf8": "a",
+          "content_hex": "61",
+          "content_hash": "0cfa666dda3f43e9dfa13c7b1b5b7b64ecbde804f326c0f343cac4de87047687",
+          "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+        },
+        {
+          "content_utf8": "https://yikz.dev/",
+          "content_hex": "68747470733a2f2f79696b7a2e6465762f",
+          "content_hash": "4a28b4a9887cdbd70ea77240b11437cc000db0da5669c982f932c3387b637a7f",
+          "sha256": "4118a09ec8ce6d7cfd6b1fd011db70e5b2e418bb5108bb30d99c52c18b473bb0"
+        }
+      ]
+    },
+    {
+      "name": "fast",
+      "key_hex": "1812e835782ff141e7c31d36543e43c4f392d24b20d1e5cdbacb32a9b1d709a0",
+      "content_hash_key_hex": "0b18b7d5bc615889456951f959472ce3b58208261986b6a62097fa2537cb2580",
+      "key_check": "44333e227f3eccc6852aa04e237aefdae5c470583744c97e80e43ab534ea2248",
+      "content_hash_samples": [
+        {
+          "content_utf8": "a",
+          "content_hex": "61",
+          "content_hash": "4028800e9d81b6dbceafc0abda1d373f7b3e5a0812493f02b79ad3a85374e24f",
+          "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "description": "YCF1 files archive: magic \"YCF1\" (59 43 46 31), u32be file_count, then per file: u32be name_length, name (UTF-8, NFC), u64be data_length, data. No padding, no trailer.",
+  "cases": [
+    {
+      "name": "three_files",
+      "files": [
+        {
+          "name": "hello.txt",
+          "name_utf8_hex": "68656c6c6f2e747874",
+          "size": 14,
+          "data_hex": "48656c6c6f2c20776f726c64210a"
+        },
+        {
+          "name": "données é.bin",
+          "name_utf8_hex": "646f6e6ec3a9657320c3a92e62696e",
+          "size": 10,
+          "data_hex": "00010203040506070809"
+        },
+        {
+          "name": "empty.txt",
+          "name_utf8_hex": "656d7074792e747874",
+          "size": 0,
+          "data_hex": ""
+        }
+      ],
+      "archive_hex": "59434631000000030000000968656c6c6f2e747874000000000000000e48656c6c6f2c20776f726c64210a0000000f646f6e6ec3a9657320c3a92e62696e000000000000000a0001020304050607080900000009656d7074792e7478740000000000000000",
+      "archive_size": 101,
+      "archive_sha256": "0f9d8fdea96eebfd90c8b7fe4a3008efff357d533c7efe0a4efb2ae49173b0f9"
+    },
+    {
+      "name": "single_large_file_header",
+      "files": [
+        {
+          "name": "pattern.bin",
+          "size": 8389608,
+          "data_rule": "byte i = i mod 251"
+        }
+      ],
+      "archive_prefix_hex": "59434631000000010000000b7061747465726e2e62696e00000000008003e8",
+      "archive_size": 8389639,
+      "archive_sha256": "6675336d5ae5db42f339e53678c6163fd753fab5e44408c142ed4a7735de8397"
+    }
+  ],
+  "invalid_names": [
+    {
+      "name": "",
+      "reason": "empty"
+    },
+    {
+      "name": ".",
+      "reason": "dot"
+    },
+    {
+      "name": "..",
+      "reason": "dot dot"
+    },
+    {
+      "name": "a/b.txt",
+      "reason": "contains slash"
+    },
+    {
+      "name": "a\\b.txt",
+      "reason": "contains backslash"
+    },
+    {
+      "name": "a\u0000b",
+      "reason": "contains NUL"
+    },
+    {
+      "name": "line\nbreak",
+      "reason": "contains control character"
+    },
+    {
+      "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "reason": "longer than 255 UTF-8 bytes"
+    }
+  ]
+}

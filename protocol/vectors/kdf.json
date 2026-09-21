@@ -1,0 +1,37 @@
+{
+  "description": "PBKDF2-HMAC-SHA256. password_input is what the user typed; implementations MUST normalize it to Unicode NFC (password_normalized) and hash its UTF-8 bytes (password_utf8_hex). The protocol always uses 600000 iterations; the 1000-iteration cases exist only for fast unit tests.",
+  "algorithm": "pbkdf2-sha256",
+  "key_length": 32,
+  "cases": [
+    {
+      "name": "primary",
+      "password_input": "correct horse battery staple",
+      "password_normalized": "correct horse battery staple",
+      "password_utf8_hex": "636f727265637420686f727365206261747465727920737461706c65",
+      "salt_b64": "XB6PKps9R+agxPgdLmuacw==",
+      "salt_hex": "5c1e8f2a9b3d47e6a0c4f81d2e6b9a73",
+      "iterations": 600000,
+      "key_hex": "445b4a046c63fd1e1aa196088b1b75665ecba3d831addb5bf5a9908236767294"
+    },
+    {
+      "name": "fast",
+      "password_input": "correct horse battery staple",
+      "password_normalized": "correct horse battery staple",
+      "password_utf8_hex": "636f727265637420686f727365206261747465727920737461706c65",
+      "salt_b64": "XB6PKps9R+agxPgdLmuacw==",
+      "salt_hex": "5c1e8f2a9b3d47e6a0c4f81d2e6b9a73",
+      "iterations": 1000,
+      "key_hex": "1812e835782ff141e7c31d36543e43c4f392d24b20d1e5cdbacb32a9b1d709a0"
+    },
+    {
+      "name": "unicode_nfd_input",
+      "password_input": "pässwörd 🔐 日本語",
+      "password_normalized": "pässwörd 🔐 日本語",
+      "password_utf8_hex": "70c3a4737377c3b6726420f09f949020e697a5e69cace8aa9e",
+      "salt_b64": "ABEiM0RVZneImaq7zN3u/w==",
+      "salt_hex": "00112233445566778899aabbccddeeff",
+      "iterations": 1000,
+      "key_hex": "056f3b0ef923d739c22d74501bf19980b5cb7a4adf3a6964d600594f6651c764"
+    }
+  ]
+}

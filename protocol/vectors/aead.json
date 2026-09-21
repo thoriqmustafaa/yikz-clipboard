@@ -1,0 +1,207 @@
+{
+  "description": "AES-256-GCM sealed boxes. sealed = nonce (12) || ciphertext || tag (16). JSON fields carry sealed as standard base64 with padding. Nonces here are fixed so outputs are deterministic; real implementations MUST use 12 fresh random bytes for every seal.",
+  "aad_formats": {
+    "meta": "yc1|meta|<item_id>",
+    "payload": "yc1|payload|<item_id>",
+    "thumb": "yc1|thumb|<item_id>",
+    "chunk": "yc1|chunk|<item_id>|<index>|<chunk_count>"
+  },
+  "positive": [
+    {
+      "name": "payload_text",
+      "purpose": "payload",
+      "key_hex": "445b4a046c63fd1e1aa196088b1b75665ecba3d831addb5bf5a9908236767294",
+      "nonce_hex": "5230380a7810976510f19da0",
+      "aad_utf8": "yc1|payload|01a0c368-81e2-7460-8f15-1684608b9fb9",
+      "aad_hex": "7963317c7061796c6f61647c30316130633336382d383165322d373436302d386631352d313638343630386239666239",
+      "plaintext_hex": "48656c6c6f2066726f6d2079696b7a2d636c6970626f61726420f09f918b0a5365636f6e64206c696e652e",
+      "plaintext_utf8": "Hello from yikz-clipboard 👋\nSecond line.",
+      "sealed_hex": "5230380a7810976510f19da0965c94021634fd6896e532a93ace3066e08e2df7c0edb333e35508156a293dd991a66212c7c64bcd28dbcfdabca9d0ff4a76f76336e1ac3df0d2db",
+      "sealed_b64": "UjA4CngQl2UQ8Z2gllyUAhY0/WiW5TKpOs4wZuCOLffA7bMz41UIFWopPdmRpmISx8ZLzSjbz9q8qdD/Snb3YzbhrD3w0ts=",
+      "sealed_length": 71
+    },
+    {
+      "name": "meta_text",
+      "purpose": "meta",
+      "key_hex": "445b4a046c63fd1e1aa196088b1b75665ecba3d831addb5bf5a9908236767294",
+      "nonce_hex": "01fe4e90027f2da1e68f4844",
+      "aad_utf8": "yc1|meta|01a0c368-81e2-7460-8f15-1684608b9fb9",
+      "aad_hex": "7963317c6d6574617c30316130633336382d383165322d373436302d386631352d313638343630386239666239",
+      "plaintext_hex": "7b2276223a312c226d696d65223a22746578742f706c61696e3b20636861727365743d7574662d38222c2270726576696577223a2248656c6c6f2066726f6d2079696b7a2d636c6970626f61726420f09f918b5c6e5365636f6e64206c696e652e222c22736861323536223a2266343138613339643530366237343063313136666533656366353538306138303536316532363563336539323137346233336239643365666530633433356139222c22736f757263655f617070223a22536166617269227d",
+      "plaintext_utf8": "{\"v\":1,\"mime\":\"text/plain; charset=utf-8\",\"preview\":\"Hello from yikz-clipboard 👋\\nSecond line.\",\"sha256\":\"f418a39d506b740c116fe3ecf5580a80561e265c3e92174b33b9d3efe0c435a9\",\"source_app\":\"Safari\"}",
+      "sealed_hex": "01fe4e90027f2da1e68f48445ac6092ed660d31970adf4373a3719f39ce1236690cac0ea5ceca625b7101ee4d9b003126602f0b558e5d80c3bcf4269fd4ad6022c3db78869b316203f6bfeb850133bfe8a5d62d0b4ebb46c22446436118fdf6e75f2a6e70ef06a9d1aae01967f823ef8377be6370f493ecf6aa077dece7ce0a119c0499e947263c382ea0e3ec3e715b02127b34f2a4f14d41ebd8410b61042e7ac4016e7505fa8001405e38a28401fa53cb166bf6fc1954f06f70cdc04db7462a8abd37a8d18687efa11861e698c8aeb418ada0635d6559846142bd12a75e20c87",
+      "sealed_b64": "Af5OkAJ/LaHmj0hEWsYJLtZg0xlwrfQ3OjcZ85zhI2aQysDqXOymJbcQHuTZsAMSZgLwtVjl2Aw7z0Jp/UrWAiw9t4hpsxYgP2v+uFATO/6KXWLQtOu0bCJEZDYRj99udfKm5w7wap0argGWf4I++Dd75jcPST7PaqB33s584KEZwEmelHJjw4LqDj7D5xWwISezTypPFNQevYQQthBC56xAFudQX6gAFAXjiihAH6U8sWa/b8GVTwb3DNwE23RiqKvTeo0YaH76EYYeaYyK60GK2gY11lWYRhQr0Sp14gyH",
+      "sealed_length": 225
+    },
+    {
+      "name": "meta_image",
+      "purpose": "meta",
+      "key_hex": "445b4a046c63fd1e1aa196088b1b75665ecba3d831addb5bf5a9908236767294",
+      "nonce_hex": "ecad45f2df306f47ce53bee5",
+      "aad_utf8": "yc1|meta|01a0c36a-51c0-7566-9bdc-1a69e5f053c0",
+      "aad_hex": "7963317c6d6574617c30316130633336612d353163302d373536362d396264632d316136396535663035336330",
+      "plaintext_hex": "7b2276223a312c226d696d65223a22696d6167652f706e67222c2270726576696577223a22222c22736861323536223a2265643063393261613232353030613730326462396162373635313161303733383462346438376633666539326564383865383630373264383830666635303234222c22696d616765223a7b227769647468223a342c22686569676874223a337d7d",
+      "plaintext_utf8": "{\"v\":1,\"mime\":\"image/png\",\"preview\":\"\",\"sha256\":\"ed0c92aa22500a702db9ab76511a07384b4d87f3fe92ed88e86072d880ff5024\",\"image\":{\"width\":4,\"height\":3}}",
+      "sealed_hex": "ecad45f2df306f47ce53bee594dfe43fe1d3a92a43cba6a63c918e60870653d0db0c6fc39548a9802e82ccdc1919a68a735d5020c082e7e6758f0ce73c1cb26539dd3d23728c71ca1c161f8b5688e2e4dfeb8a10f61d6ec90aa457fcb71cabd65d29a60bbf52be46773c0861fd2ff99df15fb74ab3ad78b2f60196d7f4d5dda8661a418b1fd7122801346da3385d8e29235a49771468ab2b358485a7bc35dfdbd82bfa26838116d5ffb4a6634579",
+      "sealed_b64": "7K1F8t8wb0fOU77llN/kP+HTqSpDy6amPJGOYIcGU9DbDG/DlUipgC6CzNwZGaaKc11QIMCC5+Z1jwznPByyZTndPSNyjHHKHBYfi1aI4uTf64oQ9h1uyQqkV/y3HKvWXSmmC79SvkZ3PAhh/S/5nfFft0qzrXiy9gGW1/TV3ahmGkGLH9cSKAE0baM4XY4pI1pJdxRoqys1hIWnvDXf29gr+iaDgRbV/7SmY0V5",
+      "sealed_length": 174
+    },
+    {
+      "name": "payload_image",
+      "purpose": "payload",
+      "key_hex": "445b4a046c63fd1e1aa196088b1b75665ecba3d831addb5bf5a9908236767294",
+      "nonce_hex": "0c212b056d77d73ea5e762e5",
+      "aad_utf8": "yc1|payload|01a0c36a-51c0-7566-9bdc-1a69e5f053c0",
+      "aad_hex": "7963317c7061796c6f61647c30316130633336612d353163302d373536362d396264632d316136396535663035336330",
+      "plaintext_hex": "89504e470d0a1a0a0000000d49484452000000040000000308020000003b9639910000003449444154789c002700d8ff040000c83c00d83c00d83c00d8040064000000000000000000000400640000000000000000000003008d9b04d908289ef00000000049454e44ae426082",
+      "sealed_hex": "0c212b056d77d73ea5e762e565ed0333c38a652c913eff701e8816918b996777aa9f67f6a73e1a52f2f1a8946cc76c389f7456740133069e919dd02dbc69cf07477273875bc2d0106f3d7466f05f067ee6b656f4179146264e71b96cd9d9b7b75ec3599ac44c67dbc2df8a38d16f132b34d43c87c4b0fdfb7b613e8a46e9e649c54e7c18627ec977f8",
+      "sealed_b64": "DCErBW131z6l52LlZe0DM8OKZSyRPv9wHogWkYuZZ3eqn2f2pz4aUvLxqJRsx2w4n3RWdAEzBp6RndAtvGnPB0dyc4dbwtAQbz10ZvBfBn7mtlb0F5FGJk5xuWzZ2be3XsNZmsRMZ9vC34o40W8TKzTUPIfEsP37e2E+ikbp5knFTnwYYn7Jd/g=",
+      "sealed_length": 137
+    },
+    {
+      "name": "thumb_image",
+      "purpose": "thumb",
+      "key_hex": "445b4a046c63fd1e1aa196088b1b75665ecba3d831addb5bf5a9908236767294",
+      "nonce_hex": "8eac82e486c225389b47a25c",
+      "aad_utf8": "yc1|thumb|01a0c36a-51c0-7566-9bdc-1a69e5f053c0",
+      "aad_hex": "7963317c7468756d627c30316130633336612d353163302d373536362d396264632d316136396535663035336330",
+      "plaintext_hex": "ffd8ffdb00840006040506050406060506070706080a100a0a09090a140e0f0c1017141818171416161a1d251f1a1b231c1616202c20232627292a29191f2d302d283025282928010707070a080a130a0a13281a161a2828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828ffc00011080003000403012200021101031101ffc401a20000010501010101010100000000000000000102030405060708090a0b100002010303020403050504040000017d01020300041105122131410613516107227114328191a1082342b1c11552d1f02433627282090a161718191a25262728292a3435363738393a434445464748494a535455565758595a636465666768696a737475767778797a838485868788898a92939495969798999aa2a3a4a5a6a7a8a9aab2b3b4b5b6b7b8b9bac2c3c4c5c6c7c8c9cad2d3d4d5d6d7d8d9dae1e2e3e4e5e6e7e8e9eaf1f2f3f4f5f6f7f8f9fa0100030101010101010101010000000000000102030405060708090a0b1100020102040403040705040400010277000102031104052131061241510761711322328108144291a1b1c109233352f0156272d10a162434e125f11718191a262728292a35363738393a434445464748494a535455565758595a636465666768696a737475767778797a82838485868788898a92939495969798999aa2a3a4a5a6a7a8a9aab2b3b4b5b6b7b8b9bac2c3c4c5c6c7c8c9cad2d3d4d5d6d7d8d9dae2e3e4e5e6e7e8e9eaf2f3f4f5f6f7f8f9faffda000c03010002110311003f00dbd1fc23a07d823ff895dbfe46aeff00c223a07fd02edff235a1a3ff00c7847576be4b32c557fadd4f7dfc4fabee659663311f53a5fbc97c2babec7fffd9",
+      "sealed_hex": "8eac82e486c225389b47a25cc6b6f894ac601eb11412d85be4f416c9d4ec05f878cac3e23ee1a8b8b229cdef9dfcd3c59c10235c088cafc00ef8f91643026f27b58a8aaac59bcf44351c48b518d925d10ac3d29f52e8fe1578349d22818957cd95e10178d7a86ea6c5e80eb6b08080a8cae5aa2932922aa2b2b21045c8603052f59ed8eabe3751903a59d8de79eb51c4cbbad16f685c48690fe348f61e11886c104c97674f67557934cb472147ffd4849c3cfc260a2127fae4df3f61ee3c8565359dbebb82b0e62d1d6c92a51585299144db06c5f74add46892b8ab6940f9620f57b11ee201e9f0f837d2eb482fff6daae63a929dc940c1027dd889fbf32dd9738061d69570b6c5ef8a34e35c7e493c87c7d690390c6c97011c1fcca66b43708e9d503110d677a86e23bfe616250065ee296cdc5ccdec0baac5331826666d889a44adb17549108556191b76bbccb4be7c4bd6ca48fd828cc29c520e6a54423f3134910b1f4c25ab2892e4406b378476feb47c66bcc5776bd2959cc9e1c3991207f6e8311cd5b4be7340581e55912b68622fd33b619e527fbe42dfde7d50a66c383e469f86aacc31327da2d3a6b3f0e4bb14c54f49d7c3efd2bc6018e2451e9ec8078591c7c4cb85be02af20f62a8272c6e8ada3c8fd521b28d10f37aaa8c1b79531328bb28582861d2a94b7d38d7bd5f34b6f8fb9b3fdcd6a4c8cd1f3f8aff3f4880c3d45db1a9deef716efbfc7c50f4b6dade7a5fec101f1eb973d74b72102377210eb2e9fc620359173a48a4355712552ea1971f85c3a6c2b5287127b0e9211af863922edea8ac0fb287deb7e264121298f7e53ca76a7273d868309bb53bf0b42e007f164905ad324d35d315e4328e3abfc8f8e4a8c0e6bda04a71977c8eaa14dd489c6e82201742ffdc1dd6c34cd46eca2fbd40e949e42bca7cc769e5dd1909330de6a3cd47",
+      "sealed_b64": "jqyC5IbCJTibR6Jcxrb4lKxgHrEUEthb5PQWydTsBfh4ysPiPuGouLIpze+d/NPFnBAjXAiMr8AO+PkWQwJvJ7WKiqrFm89ENRxItRjZJdEKw9KfUuj+FXg0nSKBiVfNleEBeNeobqbF6A62sICAqMrlqikykiqisrIQRchgMFL1ntjqvjdRkDpZ2N5561HEy7rRb2hcSGkP40j2HhGIbBBMl2dPZ1V5NMtHIUf/1IScPPwmCiEn+uTfP2HuPIVlNZ2+u4Kw5i0dbJKlFYUpkUTbBsX3St1GiSuKtpQPliD1exHuIB6fD4N9LrSC//barmOpKdyUDBAn3YifvzLdlzgGHWlXC2xe+KNONcfkk8h8fWkDkMbJcBHB/MpmtDcI6dUDEQ1neobiO/5hYlAGXuKWzcXM3sC6rFMxgmZm2ImkStsXVJEIVWGRt2u8y0vnxL1spI/YKMwpxSDmpUQj8xNJELH0wlqyiS5EBrN4R2/rR8ZrzFd2vSlZzJ4cOZEgf26DEc1bS+c0BYHlWRK2hiL9M7YZ5Sf75C3959UKZsOD5Gn4aqzDEyfaLTprPw5LsUxU9J18Pv0rxgGOJFHp7IB4WRx8TLhb4CryD2KoJyxuito8j9Uhso0Q83qqjBt5UxMouyhYKGHSqUt9ONe9XzS2+PubP9zWpMjNHz+K/z9IgMPUXbGp3u9xbvv8fFD0ttreel/sEB8euXPXS3IQI3chDrLp/GIDWRc6SKQ1VxJVLqGXH4XDpsK1KHEnsOkhGvhjki7eqKwPsofet+JkEhKY9+U8p2pyc9hoMJu1O/C0LgB/FkkFrTJNNdMV5DKOOr/I+OSowOa9oEpxl3yOqhTdSJxugiAXQv/cHdbDTNRuyi+9QOlJ5CvKfMdp5d0ZCTMN5qPNRw==",
+      "sealed_length": 679
+    },
+    {
+      "name": "payload_files",
+      "purpose": "payload",
+      "key_hex": "445b4a046c63fd1e1aa196088b1b75665ecba3d831addb5bf5a9908236767294",
+      "nonce_hex": "d979512c8861d88c638f3d71",
+      "aad_utf8": "yc1|payload|01a0c36b-3c20-7558-a621-6f947a818022",
+      "aad_hex": "7963317c7061796c6f61647c30316130633336622d336332302d373535382d613632312d366639343761383138303232",
+      "plaintext_hex": "59434631000000030000000968656c6c6f2e747874000000000000000e48656c6c6f2c20776f726c64210a0000000f646f6e6ec3a9657320c3a92e62696e000000000000000a0001020304050607080900000009656d7074792e7478740000000000000000",
+      "sealed_hex": "d979512c8861d88c638f3d711cf04c33655dced665cbeb0469f49c268cb337c5e1cddeca0b655e0652ad52bee50e3e9ae64ed4c8a561757ad17048c10112c9d5caa940ca802c22f2df35717454b903195ab12029ebd6b583fba5fef41aab47e7aadc3d5a1618474bb13ca5b30df8a3d5b403fa41f1bf7aefaa9becfec913a92aa3",
+      "sealed_b64": "2XlRLIhh2Ixjjz1xHPBMM2VdztZly+sEafScJoyzN8Xhzd7KC2VeBlKtUr7lDj6a5k7UyKVhdXrRcEjBARLJ1cqpQMqALCLy3zVxdFS5AxlasSAp69a1g/ul/vQaq0fnqtw9WhYYR0uxPKWzDfij1bQD+kHxv3rvqpvs/skTqSqj",
+      "sealed_length": 129
+    },
+    {
+      "name": "chunk_1_of_3",
+      "purpose": "chunk",
+      "key_hex": "445b4a046c63fd1e1aa196088b1b75665ecba3d831addb5bf5a9908236767294",
+      "nonce_hex": "4a9fe490d11be071a5687108",
+      "aad_utf8": "yc1|chunk|01a0c368-81e2-7460-8f15-1684608b9fb9|1|3",
+      "aad_hex": "7963317c6368756e6b7c30316130633336382d383165322d373436302d386631352d3136383436303862396662397c317c33",
+      "plaintext_hex": "6368756e6b20706c61696e74657874206578616d706c653b207265616c206368756e6b732061726520343139343330342062797465732065786365707420746865206c617374",
+      "plaintext_utf8": "chunk plaintext example; real chunks are 4194304 bytes except the last",
+      "sealed_hex": "4a9fe490d11be071a568710836abf90e578791fe137a34f1f446be8c05e25796305ecb0f76d2ae86c8e10410f841af881c87d34e4bf64ba38abb2a8a7880fb8bafbc16e6b35fd40dd0db9a8a90ca62188b3859553d395c6dbb31bd730a337552bfdb",
+      "sealed_b64": "Sp/kkNEb4HGlaHEINqv5DleHkf4TejTx9Ea+jAXiV5YwXssPdtKuhsjhBBD4Qa+IHIfTTkv2S6OKuyqKeID7i6+8FuazX9QN0NuaipDKYhiLOFlVPTlcbbsxvXMKM3VSv9s=",
+      "sealed_length": 98
+    },
+    {
+      "name": "chunk_0_of_1_fast_key",
+      "purpose": "chunk",
+      "key_hex": "1812e835782ff141e7c31d36543e43c4f392d24b20d1e5cdbacb32a9b1d709a0",
+      "nonce_hex": "0cfa0c154db3ee3701b760a2",
+      "aad_utf8": "yc1|chunk|01a0c36d-10e0-7a56-86e3-483e2f79d9c5|0|1",
+      "aad_hex": "7963317c6368756e6b7c30316130633336642d313065302d376135362d383665332d3438336532663739643963357c307c31",
+      "plaintext_hex": "78",
+      "plaintext_utf8": "x",
+      "sealed_hex": "0cfa0c154db3ee3701b760a201f27a36153913e0bb47cdd5be4eb303c8",
+      "sealed_b64": "DPoMFU2z7jcBt2CiAfJ6NhU5E+C7R83Vvk6zA8g=",
+      "sealed_length": 29
+    },
+    {
+      "name": "payload_text_fast_key",
+      "purpose": "payload",
+      "key_hex": "1812e835782ff141e7c31d36543e43c4f392d24b20d1e5cdbacb32a9b1d709a0",
+      "nonce_hex": "5f95a380e7e628bbf2909818",
+      "aad_utf8": "yc1|payload|01a0c368-81e2-7460-8f15-1684608b9fb9",
+      "aad_hex": "7963317c7061796c6f61647c30316130633336382d383165322d373436302d386631352d313638343630386239666239",
+      "plaintext_hex": "48656c6c6f2066726f6d2079696b7a2d636c6970626f61726420f09f918b0a5365636f6e64206c696e652e",
+      "plaintext_utf8": "Hello from yikz-clipboard 👋\nSecond line.",
+      "sealed_hex": "5f95a380e7e628bbf29098183ccb245c2b145079510fdc75a8701b4124ea7a6f35b43b6f0b59b1d52c1c44486e14f545ec5034ae661989b3cc6c17f042cd0b3c4ca53d84c15ea8",
+      "sealed_b64": "X5WjgOfmKLvykJgYPMskXCsUUHlRD9x1qHAbQSTqem81tDtvC1mx1SwcREhuFPVF7FA0rmYZibPMbBfwQs0LPEylPYTBXqg=",
+      "sealed_length": 71
+    }
+  ],
+  "negative": [
+    {
+      "name": "tampered_tag",
+      "reason": "last tag byte flipped",
+      "key_hex": "445b4a046c63fd1e1aa196088b1b75665ecba3d831addb5bf5a9908236767294",
+      "aad_utf8": "yc1|payload|01a0c368-81e2-7460-8f15-1684608b9fb9",
+      "aad_hex": "7963317c7061796c6f61647c30316130633336382d383165322d373436302d386631352d313638343630386239666239",
+      "sealed_hex": "5230380a7810976510f19da0965c94021634fd6896e532a93ace3066e08e2df7c0edb333e35508156a293dd991a66212c7c64bcd28dbcfdabca9d0ff4a76f76336e1ac3df0d2da",
+      "sealed_b64": "UjA4CngQl2UQ8Z2gllyUAhY0/WiW5TKpOs4wZuCOLffA7bMz41UIFWopPdmRpmISx8ZLzSjbz9q8qdD/Snb3YzbhrD3w0to=",
+      "expect": "decrypt_error"
+    },
+    {
+      "name": "tampered_ciphertext",
+      "reason": "first ciphertext byte flipped",
+      "key_hex": "445b4a046c63fd1e1aa196088b1b75665ecba3d831addb5bf5a9908236767294",
+      "aad_utf8": "yc1|payload|01a0c368-81e2-7460-8f15-1684608b9fb9",
+      "aad_hex": "7963317c7061796c6f61647c30316130633336382d383165322d373436302d386631352d313638343630386239666239",
+      "sealed_hex": "5230380a7810976510f19da0165c94021634fd6896e532a93ace3066e08e2df7c0edb333e35508156a293dd991a66212c7c64bcd28dbcfdabca9d0ff4a76f76336e1ac3df0d2db",
+      "sealed_b64": "UjA4CngQl2UQ8Z2gFlyUAhY0/WiW5TKpOs4wZuCOLffA7bMz41UIFWopPdmRpmISx8ZLzSjbz9q8qdD/Snb3YzbhrD3w0ts=",
+      "expect": "decrypt_error"
+    },
+    {
+      "name": "chunk_index_swapped",
+      "reason": "chunk 1 of 3 opened with the AAD of chunk 0 of 3",
+      "key_hex": "445b4a046c63fd1e1aa196088b1b75665ecba3d831addb5bf5a9908236767294",
+      "aad_utf8": "yc1|chunk|01a0c368-81e2-7460-8f15-1684608b9fb9|0|3",
+      "aad_hex": "7963317c6368756e6b7c30316130633336382d383165322d373436302d386631352d3136383436303862396662397c307c33",
+      "sealed_hex": "4a9fe490d11be071a568710836abf90e578791fe137a34f1f446be8c05e25796305ecb0f76d2ae86c8e10410f841af881c87d34e4bf64ba38abb2a8a7880fb8bafbc16e6b35fd40dd0db9a8a90ca62188b3859553d395c6dbb31bd730a337552bfdb",
+      "sealed_b64": "Sp/kkNEb4HGlaHEINqv5DleHkf4TejTx9Ea+jAXiV5YwXssPdtKuhsjhBBD4Qa+IHIfTTkv2S6OKuyqKeID7i6+8FuazX9QN0NuaipDKYhiLOFlVPTlcbbsxvXMKM3VSv9s=",
+      "expect": "decrypt_error"
+    },
+    {
+      "name": "chunk_count_changed",
+      "reason": "chunk 1 of 3 opened with the AAD of chunk 1 of 2 (truncation)",
+      "key_hex": "445b4a046c63fd1e1aa196088b1b75665ecba3d831addb5bf5a9908236767294",
+      "aad_utf8": "yc1|chunk|01a0c368-81e2-7460-8f15-1684608b9fb9|1|2",
+      "aad_hex": "7963317c6368756e6b7c30316130633336382d383165322d373436302d386631352d3136383436303862396662397c317c32",
+      "sealed_hex": "4a9fe490d11be071a568710836abf90e578791fe137a34f1f446be8c05e25796305ecb0f76d2ae86c8e10410f841af881c87d34e4bf64ba38abb2a8a7880fb8bafbc16e6b35fd40dd0db9a8a90ca62188b3859553d395c6dbb31bd730a337552bfdb",
+      "sealed_b64": "Sp/kkNEb4HGlaHEINqv5DleHkf4TejTx9Ea+jAXiV5YwXssPdtKuhsjhBBD4Qa+IHIfTTkv2S6OKuyqKeID7i6+8FuazX9QN0NuaipDKYhiLOFlVPTlcbbsxvXMKM3VSv9s=",
+      "expect": "decrypt_error"
+    },
+    {
+      "name": "meta_moved_to_other_item",
+      "reason": "meta of the text item opened with the AAD of the image item",
+      "key_hex": "445b4a046c63fd1e1aa196088b1b75665ecba3d831addb5bf5a9908236767294",
+      "aad_utf8": "yc1|meta|01a0c36a-51c0-7566-9bdc-1a69e5f053c0",
+      "aad_hex": "7963317c6d6574617c30316130633336612d353163302d373536362d396264632d316136396535663035336330",
+      "sealed_hex": "01fe4e90027f2da1e68f48445ac6092ed660d31970adf4373a3719f39ce1236690cac0ea5ceca625b7101ee4d9b003126602f0b558e5d80c3bcf4269fd4ad6022c3db78869b316203f6bfeb850133bfe8a5d62d0b4ebb46c22446436118fdf6e75f2a6e70ef06a9d1aae01967f823ef8377be6370f493ecf6aa077dece7ce0a119c0499e947263c382ea0e3ec3e715b02127b34f2a4f14d41ebd8410b61042e7ac4016e7505fa8001405e38a28401fa53cb166bf6fc1954f06f70cdc04db7462a8abd37a8d18687efa11861e698c8aeb418ada0635d6559846142bd12a75e20c87",
+      "sealed_b64": "Af5OkAJ/LaHmj0hEWsYJLtZg0xlwrfQ3OjcZ85zhI2aQysDqXOymJbcQHuTZsAMSZgLwtVjl2Aw7z0Jp/UrWAiw9t4hpsxYgP2v+uFATO/6KXWLQtOu0bCJEZDYRj99udfKm5w7wap0argGWf4I++Dd75jcPST7PaqB33s584KEZwEmelHJjw4LqDj7D5xWwISezTypPFNQevYQQthBC56xAFudQX6gAFAXjiihAH6U8sWa/b8GVTwb3DNwE23RiqKvTeo0YaH76EYYeaYyK60GK2gY11lWYRhQr0Sp14gyH",
+      "expect": "decrypt_error"
+    },
+    {
+      "name": "purpose_confusion",
+      "reason": "payload opened with the meta AAD of the same item",
+      "key_hex": "445b4a046c63fd1e1aa196088b1b75665ecba3d831addb5bf5a9908236767294",
+      "aad_utf8": "yc1|meta|01a0c368-81e2-7460-8f15-1684608b9fb9",
+      "aad_hex": "7963317c6d6574617c30316130633336382d383165322d373436302d386631352d313638343630386239666239",
+      "sealed_hex": "5230380a7810976510f19da0965c94021634fd6896e532a93ace3066e08e2df7c0edb333e35508156a293dd991a66212c7c64bcd28dbcfdabca9d0ff4a76f76336e1ac3df0d2db",
+      "sealed_b64": "UjA4CngQl2UQ8Z2gllyUAhY0/WiW5TKpOs4wZuCOLffA7bMz41UIFWopPdmRpmISx8ZLzSjbz9q8qdD/Snb3YzbhrD3w0ts=",
+      "expect": "decrypt_error"
+    },
+    {
+      "name": "wrong_key",
+      "reason": "first key byte flipped",
+      "key_hex": "455b4a046c63fd1e1aa196088b1b75665ecba3d831addb5bf5a9908236767294",
+      "aad_utf8": "yc1|payload|01a0c368-81e2-7460-8f15-1684608b9fb9",
+      "aad_hex": "7963317c7061796c6f61647c30316130633336382d383165322d373436302d386631352d313638343630386239666239",
+      "sealed_hex": "5230380a7810976510f19da0965c94021634fd6896e532a93ace3066e08e2df7c0edb333e35508156a293dd991a66212c7c64bcd28dbcfdabca9d0ff4a76f76336e1ac3df0d2db",
+      "sealed_b64": "UjA4CngQl2UQ8Z2gllyUAhY0/WiW5TKpOs4wZuCOLffA7bMz41UIFWopPdmRpmISx8ZLzSjbz9q8qdD/Snb3YzbhrD3w0ts=",
+      "expect": "decrypt_error"
+    },
+    {
+      "name": "too_short",
+      "reason": "sealed box shorter than 28 bytes",
+      "key_hex": "445b4a046c63fd1e1aa196088b1b75665ecba3d831addb5bf5a9908236767294",
+      "aad_utf8": "yc1|payload|01a0c368-81e2-7460-8f15-1684608b9fb9",
+      "aad_hex": "7963317c7061796c6f61647c30316130633336382d383165322d373436302d386631352d313638343630386239666239",
+      "sealed_hex": "5230380a7810976510f19da0965c94021634fd6896e532a93ace30",
+      "sealed_b64": "UjA4CngQl2UQ8Z2gllyUAhY0/WiW5TKpOs4w",
+      "expect": "decrypt_error"
+    }
+  ]
+}

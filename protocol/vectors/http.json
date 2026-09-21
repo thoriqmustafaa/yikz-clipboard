@@ -1,0 +1,1134 @@
+{
+  "description": "Canonical HTTP request/response examples. Values are consistent with kdf.json primary key and items.json; meta, payload and thumb fields decrypt with that key. Field order is not significant. Clients MUST ignore unknown response fields.",
+  "examples": [
+    {
+      "name": "login_new_device",
+      "method": "POST",
+      "path": "/api/login",
+      "request_headers": {
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "username": "thoriq",
+        "password": "login-password-example",
+        "device_name": "Thoriq MacBook Pro",
+        "platform": "macos"
+      },
+      "status": 200,
+      "response_body": {
+        "device_id": "01a05c00-03e0-7c59-b16c-c1bb2928ae88",
+        "token": "yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw",
+        "username": "thoriq",
+        "salt": "XB6PKps9R+agxPgdLmuacw==",
+        "kdf": {
+          "algorithm": "pbkdf2-sha256",
+          "iterations": 600000,
+          "key_length": 32
+        },
+        "key_check": null,
+        "server_id": "01a05bfb-7000-7691-98e4-301030971d0c",
+        "server_version": "1.0.0",
+        "protocol_version": 1
+      }
+    },
+    {
+      "name": "login_existing_device",
+      "method": "POST",
+      "path": "/api/login",
+      "request_headers": {
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "username": "thoriq",
+        "password": "login-password-example",
+        "device_name": "Pixel 9",
+        "platform": "android",
+        "device_id": "01a05c04-97c0-7c1c-bdb7-1933ae6945c4"
+      },
+      "status": 200,
+      "response_body": {
+        "device_id": "01a05c04-97c0-7c1c-bdb7-1933ae6945c4",
+        "token": "yc_RzuwVQ1vSeAr3oYyicvhRY3FR0KLKU7d4-9bexL3NeQ",
+        "username": "thoriq",
+        "salt": "XB6PKps9R+agxPgdLmuacw==",
+        "kdf": {
+          "algorithm": "pbkdf2-sha256",
+          "iterations": 600000,
+          "key_length": 32
+        },
+        "key_check": "41f6d0b7f5e8d491269b90fc8988b2f48757f7a48baaeb9129da7ea9bb427e93",
+        "server_id": "01a05bfb-7000-7691-98e4-301030971d0c",
+        "server_version": "1.0.0",
+        "protocol_version": 1
+      }
+    },
+    {
+      "name": "login_invalid_credentials",
+      "method": "POST",
+      "path": "/api/login",
+      "request_headers": {
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "username": "thoriq",
+        "password": "wrong",
+        "device_name": "Pixel 9",
+        "platform": "android"
+      },
+      "status": 401,
+      "response_body": {
+        "code": "invalid_credentials",
+        "message": "invalid username or password"
+      }
+    },
+    {
+      "name": "login_invalid_platform",
+      "method": "POST",
+      "path": "/api/login",
+      "request_headers": {
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "username": "thoriq",
+        "password": "login-password-example",
+        "device_name": "iPhone",
+        "platform": "ios"
+      },
+      "status": 400,
+      "response_body": {
+        "code": "invalid_request",
+        "message": "platform must be one of macos, android, windows, web"
+      }
+    },
+    {
+      "name": "login_rate_limited",
+      "method": "POST",
+      "path": "/api/login",
+      "request_headers": {
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "username": "thoriq",
+        "password": "wrong",
+        "device_name": "Pixel 9",
+        "platform": "android"
+      },
+      "status": 429,
+      "response_headers": {
+        "Retry-After": "600"
+      },
+      "response_body": {
+        "code": "rate_limited",
+        "message": "too many failed login attempts"
+      }
+    },
+    {
+      "name": "me",
+      "method": "GET",
+      "path": "/api/me",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw"
+      },
+      "status": 200,
+      "response_body": {
+        "username": "thoriq",
+        "device": {
+          "id": "01a05c00-03e0-7c59-b16c-c1bb2928ae88",
+          "name": "Thoriq MacBook Pro",
+          "platform": "macos",
+          "created_at": "2026-09-01T08:05:00.000Z",
+          "last_seen_at": "2026-09-21T10:10:00.000Z",
+          "online": true,
+          "revoked": false,
+          "current": true
+        },
+        "salt": "XB6PKps9R+agxPgdLmuacw==",
+        "kdf": {
+          "algorithm": "pbkdf2-sha256",
+          "iterations": 600000,
+          "key_length": 32
+        },
+        "key_check": "41f6d0b7f5e8d491269b90fc8988b2f48757f7a48baaeb9129da7ea9bb427e93",
+        "server_id": "01a05bfb-7000-7691-98e4-301030971d0c",
+        "server_version": "1.0.0",
+        "protocol_version": 1,
+        "limits": {
+          "inline_max_bytes": 262144,
+          "chunk_size_bytes": 4194304,
+          "max_chunk_body_bytes": 4194332,
+          "thumb_max_bytes": 65536,
+          "meta_max_bytes": 65536,
+          "max_json_body_bytes": 1048576,
+          "max_files_per_item": 1000,
+          "history_default_limit": 100,
+          "history_max_limit": 500,
+          "max_ws_client_frame_bytes": 65536,
+          "max_ws_server_frame_bytes": 1048576,
+          "max_connections_per_device": 8,
+          "upload_ttl_seconds": 3600,
+          "disk_low_max_upload_bytes": 1048576
+        }
+      }
+    },
+    {
+      "name": "me_unauthorized",
+      "method": "GET",
+      "path": "/api/me",
+      "request_headers": {
+        "Authorization": "Bearer yc_invalidtokeninvalidtokeninvalidtokeninval"
+      },
+      "status": 401,
+      "response_body": {
+        "code": "unauthorized",
+        "message": "missing, invalid or revoked token"
+      }
+    },
+    {
+      "name": "logout",
+      "method": "POST",
+      "path": "/api/logout",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw"
+      },
+      "status": 204
+    },
+    {
+      "name": "key_check_set",
+      "method": "PUT",
+      "path": "/api/account/key-check",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw",
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "key_check": "41f6d0b7f5e8d491269b90fc8988b2f48757f7a48baaeb9129da7ea9bb427e93"
+      },
+      "status": 204
+    },
+    {
+      "name": "key_check_conflict",
+      "method": "PUT",
+      "path": "/api/account/key-check",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw",
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "key_check": "2aa876099cbf0b95a3e2504a603d72e7be1aa270ee2401b7a35594b0096951ab"
+      },
+      "status": 409,
+      "response_body": {
+        "code": "key_check_exists",
+        "message": "a different key check is already stored"
+      }
+    },
+    {
+      "name": "key_check_reset_refused",
+      "method": "DELETE",
+      "path": "/api/account/key-check",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw"
+      },
+      "status": 409,
+      "response_body": {
+        "code": "items_exist",
+        "message": "delete all items before resetting the key check"
+      }
+    },
+    {
+      "name": "devices_list",
+      "method": "GET",
+      "path": "/api/devices",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw"
+      },
+      "status": 200,
+      "response_body": {
+        "devices": [
+          {
+            "id": "01a05c00-03e0-7c59-b16c-c1bb2928ae88",
+            "name": "Thoriq MacBook Pro",
+            "platform": "macos",
+            "created_at": "2026-09-01T08:05:00.000Z",
+            "last_seen_at": "2026-09-21T10:10:00.000Z",
+            "online": true,
+            "revoked": false,
+            "current": true
+          },
+          {
+            "id": "01a05c04-97c0-7c1c-bdb7-1933ae6945c4",
+            "name": "Pixel 9",
+            "platform": "android",
+            "created_at": "2026-09-01T08:10:00.000Z",
+            "last_seen_at": "2026-09-21T10:10:00.000Z",
+            "online": true,
+            "revoked": false,
+            "current": false
+          },
+          {
+            "id": "01a06158-ba80-7326-af5c-c9255f9309c8",
+            "name": "Desktop PC",
+            "platform": "windows",
+            "created_at": "2026-09-02T09:00:00.000Z",
+            "last_seen_at": "2026-09-21T10:04:00.000Z",
+            "online": false,
+            "revoked": false,
+            "current": false
+          },
+          {
+            "id": "01a06723-e200-74bb-8146-e73d69671a05",
+            "name": "Firefox on Linux",
+            "platform": "web",
+            "created_at": "2026-09-03T12:00:00.000Z",
+            "last_seen_at": "2026-09-19T10:00:00.000Z",
+            "online": false,
+            "revoked": true,
+            "current": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "device_rename",
+      "method": "PATCH",
+      "path": "/api/devices/01a06158-ba80-7326-af5c-c9255f9309c8",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw",
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "name": "Gaming PC"
+      },
+      "status": 200,
+      "response_body": {
+        "id": "01a06158-ba80-7326-af5c-c9255f9309c8",
+        "name": "Gaming PC",
+        "platform": "windows",
+        "created_at": "2026-09-02T09:00:00.000Z",
+        "last_seen_at": "2026-09-21T10:04:00.000Z",
+        "online": false,
+        "revoked": false,
+        "current": false
+      }
+    },
+    {
+      "name": "device_revoke",
+      "method": "DELETE",
+      "path": "/api/devices/01a06158-ba80-7326-af5c-c9255f9309c8",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw"
+      },
+      "status": 204
+    },
+    {
+      "name": "device_not_found",
+      "method": "DELETE",
+      "path": "/api/devices/01926f3c-8d2a-7b3e-9f10-0123456789ab",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw"
+      },
+      "status": 404,
+      "response_body": {
+        "code": "not_found",
+        "message": "device not found"
+      }
+    },
+    {
+      "name": "item_create_inline",
+      "method": "POST",
+      "path": "/api/items",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw",
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "id": "01a0c368-81e2-7460-8f15-1684608b9fb9",
+        "kind": "text",
+        "size": 43,
+        "chunk_count": 0,
+        "content_hash": "290c70322c58faf004eec4c41a380b481cdaa8eee960b518d4a52798d4a77bce",
+        "meta": "Af5OkAJ/LaHmj0hEWsYJLtZg0xlwrfQ3OjcZ85zhI2aQysDqXOymJbcQHuTZsAMSZgLwtVjl2Aw7z0Jp/UrWAiw9t4hpsxYgP2v+uFATO/6KXWLQtOu0bCJEZDYRj99udfKm5w7wap0argGWf4I++Dd75jcPST7PaqB33s584KEZwEmelHJjw4LqDj7D5xWwISezTypPFNQevYQQthBC56xAFudQX6gAFAXjiihAH6U8sWa/b8GVTwb3DNwE23RiqKvTeo0YaH76EYYeaYyK60GK2gY11lWYRhQr0Sp14gyH",
+        "payload": "UjA4CngQl2UQ8Z2gllyUAhY0/WiW5TKpOs4wZuCOLffA7bMz41UIFWopPdmRpmISx8ZLzSjbz9q8qdD/Snb3YzbhrD3w0ts="
+      },
+      "status": 201,
+      "response_body": {
+        "id": "01a0c368-81e2-7460-8f15-1684608b9fb9",
+        "seq": 41,
+        "device_id": "01a05c00-03e0-7c59-b16c-c1bb2928ae88",
+        "kind": "text",
+        "size": 43,
+        "chunk_count": 0,
+        "created_at": "2026-09-21T10:00:01.250Z",
+        "pinned": false,
+        "content_hash": "290c70322c58faf004eec4c41a380b481cdaa8eee960b518d4a52798d4a77bce",
+        "has_thumb": false,
+        "stored_bytes": 296,
+        "meta": "Af5OkAJ/LaHmj0hEWsYJLtZg0xlwrfQ3OjcZ85zhI2aQysDqXOymJbcQHuTZsAMSZgLwtVjl2Aw7z0Jp/UrWAiw9t4hpsxYgP2v+uFATO/6KXWLQtOu0bCJEZDYRj99udfKm5w7wap0argGWf4I++Dd75jcPST7PaqB33s584KEZwEmelHJjw4LqDj7D5xWwISezTypPFNQevYQQthBC56xAFudQX6gAFAXjiihAH6U8sWa/b8GVTwb3DNwE23RiqKvTeo0YaH76EYYeaYyK60GK2gY11lWYRhQr0Sp14gyH"
+      }
+    },
+    {
+      "name": "item_create_inline_with_thumb_uploaded_first",
+      "method": "POST",
+      "path": "/api/items",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw",
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "id": "01a0c36a-51c0-7566-9bdc-1a69e5f053c0",
+        "kind": "image",
+        "size": 109,
+        "chunk_count": 0,
+        "content_hash": "bf7b3491c9bb896212220796654f935f8198650fb591bdb4b8ad6b7c360b8c18",
+        "meta": "7K1F8t8wb0fOU77llN/kP+HTqSpDy6amPJGOYIcGU9DbDG/DlUipgC6CzNwZGaaKc11QIMCC5+Z1jwznPByyZTndPSNyjHHKHBYfi1aI4uTf64oQ9h1uyQqkV/y3HKvWXSmmC79SvkZ3PAhh/S/5nfFft0qzrXiy9gGW1/TV3ahmGkGLH9cSKAE0baM4XY4pI1pJdxRoqys1hIWnvDXf29gr+iaDgRbV/7SmY0V5",
+        "payload": "DCErBW131z6l52LlZe0DM8OKZSyRPv9wHogWkYuZZ3eqn2f2pz4aUvLxqJRsx2w4n3RWdAEzBp6RndAtvGnPB0dyc4dbwtAQbz10ZvBfBn7mtlb0F5FGJk5xuWzZ2be3XsNZmsRMZ9vC34o40W8TKzTUPIfEsP37e2E+ikbp5knFTnwYYn7Jd/g="
+      },
+      "status": 201,
+      "response_body": {
+        "id": "01a0c36a-51c0-7566-9bdc-1a69e5f053c0",
+        "seq": 42,
+        "device_id": "01a05c04-97c0-7c1c-bdb7-1933ae6945c4",
+        "kind": "image",
+        "size": 109,
+        "chunk_count": 0,
+        "created_at": "2026-09-21T10:02:00.000Z",
+        "pinned": false,
+        "content_hash": "bf7b3491c9bb896212220796654f935f8198650fb591bdb4b8ad6b7c360b8c18",
+        "has_thumb": true,
+        "stored_bytes": 990,
+        "meta": "7K1F8t8wb0fOU77llN/kP+HTqSpDy6amPJGOYIcGU9DbDG/DlUipgC6CzNwZGaaKc11QIMCC5+Z1jwznPByyZTndPSNyjHHKHBYfi1aI4uTf64oQ9h1uyQqkV/y3HKvWXSmmC79SvkZ3PAhh/S/5nfFft0qzrXiy9gGW1/TV3ahmGkGLH9cSKAE0baM4XY4pI1pJdxRoqys1hIWnvDXf29gr+iaDgRbV/7SmY0V5"
+      }
+    },
+    {
+      "name": "item_create_repeat_is_idempotent",
+      "method": "POST",
+      "path": "/api/items",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw",
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "id": "01a0c368-81e2-7460-8f15-1684608b9fb9",
+        "kind": "text",
+        "size": 43,
+        "chunk_count": 0,
+        "content_hash": "290c70322c58faf004eec4c41a380b481cdaa8eee960b518d4a52798d4a77bce",
+        "meta": "Af5OkAJ/LaHmj0hEWsYJLtZg0xlwrfQ3OjcZ85zhI2aQysDqXOymJbcQHuTZsAMSZgLwtVjl2Aw7z0Jp/UrWAiw9t4hpsxYgP2v+uFATO/6KXWLQtOu0bCJEZDYRj99udfKm5w7wap0argGWf4I++Dd75jcPST7PaqB33s584KEZwEmelHJjw4LqDj7D5xWwISezTypPFNQevYQQthBC56xAFudQX6gAFAXjiihAH6U8sWa/b8GVTwb3DNwE23RiqKvTeo0YaH76EYYeaYyK60GK2gY11lWYRhQr0Sp14gyH",
+        "payload": "UjA4CngQl2UQ8Z2gllyUAhY0/WiW5TKpOs4wZuCOLffA7bMz41UIFWopPdmRpmISx8ZLzSjbz9q8qdD/Snb3YzbhrD3w0ts="
+      },
+      "status": 200,
+      "response_body": {
+        "id": "01a0c368-81e2-7460-8f15-1684608b9fb9",
+        "seq": 41,
+        "device_id": "01a05c00-03e0-7c59-b16c-c1bb2928ae88",
+        "kind": "text",
+        "size": 43,
+        "chunk_count": 0,
+        "created_at": "2026-09-21T10:00:01.250Z",
+        "pinned": false,
+        "content_hash": "290c70322c58faf004eec4c41a380b481cdaa8eee960b518d4a52798d4a77bce",
+        "has_thumb": false,
+        "stored_bytes": 296,
+        "meta": "Af5OkAJ/LaHmj0hEWsYJLtZg0xlwrfQ3OjcZ85zhI2aQysDqXOymJbcQHuTZsAMSZgLwtVjl2Aw7z0Jp/UrWAiw9t4hpsxYgP2v+uFATO/6KXWLQtOu0bCJEZDYRj99udfKm5w7wap0argGWf4I++Dd75jcPST7PaqB33s584KEZwEmelHJjw4LqDj7D5xWwISezTypPFNQevYQQthBC56xAFudQX6gAFAXjiihAH6U8sWa/b8GVTwb3DNwE23RiqKvTeo0YaH76EYYeaYyK60GK2gY11lWYRhQr0Sp14gyH"
+      }
+    },
+    {
+      "name": "item_create_id_conflict",
+      "method": "POST",
+      "path": "/api/items",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw",
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "kind": "image",
+        "size": 109,
+        "chunk_count": 0,
+        "content_hash": "bf7b3491c9bb896212220796654f935f8198650fb591bdb4b8ad6b7c360b8c18",
+        "meta": "7K1F8t8wb0fOU77llN/kP+HTqSpDy6amPJGOYIcGU9DbDG/DlUipgC6CzNwZGaaKc11QIMCC5+Z1jwznPByyZTndPSNyjHHKHBYfi1aI4uTf64oQ9h1uyQqkV/y3HKvWXSmmC79SvkZ3PAhh/S/5nfFft0qzrXiy9gGW1/TV3ahmGkGLH9cSKAE0baM4XY4pI1pJdxRoqys1hIWnvDXf29gr+iaDgRbV/7SmY0V5",
+        "payload": "DCErBW131z6l52LlZe0DM8OKZSyRPv9wHogWkYuZZ3eqn2f2pz4aUvLxqJRsx2w4n3RWdAEzBp6RndAtvGnPB0dyc4dbwtAQbz10ZvBfBn7mtlb0F5FGJk5xuWzZ2be3XsNZmsRMZ9vC34o40W8TKzTUPIfEsP37e2E+ikbp5knFTnwYYn7Jd/g=",
+        "id": "01a0c368-81e2-7460-8f15-1684608b9fb9"
+      },
+      "status": 409,
+      "response_body": {
+        "code": "id_conflict",
+        "message": "an item with this id already exists with different content"
+      }
+    },
+    {
+      "name": "item_create_payload_size_mismatch",
+      "method": "POST",
+      "path": "/api/items",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw",
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "id": "01a0c368-81e2-7460-8f15-1684608b9fb9",
+        "kind": "text",
+        "chunk_count": 0,
+        "content_hash": "290c70322c58faf004eec4c41a380b481cdaa8eee960b518d4a52798d4a77bce",
+        "meta": "Af5OkAJ/LaHmj0hEWsYJLtZg0xlwrfQ3OjcZ85zhI2aQysDqXOymJbcQHuTZsAMSZgLwtVjl2Aw7z0Jp/UrWAiw9t4hpsxYgP2v+uFATO/6KXWLQtOu0bCJEZDYRj99udfKm5w7wap0argGWf4I++Dd75jcPST7PaqB33s584KEZwEmelHJjw4LqDj7D5xWwISezTypPFNQevYQQthBC56xAFudQX6gAFAXjiihAH6U8sWa/b8GVTwb3DNwE23RiqKvTeo0YaH76EYYeaYyK60GK2gY11lWYRhQr0Sp14gyH",
+        "payload": "UjA4CngQl2UQ8Z2gllyUAhY0/WiW5TKpOs4wZuCOLffA7bMz41UIFWopPdmRpmISx8ZLzSjbz9q8qdD/Snb3YzbhrD3w0ts=",
+        "size": 44
+      },
+      "status": 400,
+      "response_body": {
+        "code": "size_mismatch",
+        "message": "payload length must equal size + 28"
+      }
+    },
+    {
+      "name": "item_create_key_check_missing",
+      "method": "POST",
+      "path": "/api/items",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw",
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "id": "01a0c368-81e2-7460-8f15-1684608b9fb9",
+        "kind": "text",
+        "size": 43,
+        "chunk_count": 0,
+        "content_hash": "290c70322c58faf004eec4c41a380b481cdaa8eee960b518d4a52798d4a77bce",
+        "meta": "Af5OkAJ/LaHmj0hEWsYJLtZg0xlwrfQ3OjcZ85zhI2aQysDqXOymJbcQHuTZsAMSZgLwtVjl2Aw7z0Jp/UrWAiw9t4hpsxYgP2v+uFATO/6KXWLQtOu0bCJEZDYRj99udfKm5w7wap0argGWf4I++Dd75jcPST7PaqB33s584KEZwEmelHJjw4LqDj7D5xWwISezTypPFNQevYQQthBC56xAFudQX6gAFAXjiihAH6U8sWa/b8GVTwb3DNwE23RiqKvTeo0YaH76EYYeaYyK60GK2gY11lWYRhQr0Sp14gyH",
+        "payload": "UjA4CngQl2UQ8Z2gllyUAhY0/WiW5TKpOs4wZuCOLffA7bMz41UIFWopPdmRpmISx8ZLzSjbz9q8qdD/Snb3YzbhrD3w0ts="
+      },
+      "status": 409,
+      "response_body": {
+        "code": "key_check_missing",
+        "message": "set the key check before uploading items"
+      }
+    },
+    {
+      "name": "thumb_upload",
+      "method": "PUT",
+      "path": "/api/items/01a0c36a-51c0-7566-9bdc-1a69e5f053c0/thumb",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw",
+        "Content-Type": "application/octet-stream"
+      },
+      "request_body": "jqyC5IbCJTibR6Jcxrb4lKxgHrEUEthb5PQWydTsBfh4ysPiPuGouLIpze+d/NPFnBAjXAiMr8AO+PkWQwJvJ7WKiqrFm89ENRxItRjZJdEKw9KfUuj+FXg0nSKBiVfNleEBeNeobqbF6A62sICAqMrlqikykiqisrIQRchgMFL1ntjqvjdRkDpZ2N5561HEy7rRb2hcSGkP40j2HhGIbBBMl2dPZ1V5NMtHIUf/1IScPPwmCiEn+uTfP2HuPIVlNZ2+u4Kw5i0dbJKlFYUpkUTbBsX3St1GiSuKtpQPliD1exHuIB6fD4N9LrSC//barmOpKdyUDBAn3YifvzLdlzgGHWlXC2xe+KNONcfkk8h8fWkDkMbJcBHB/MpmtDcI6dUDEQ1neobiO/5hYlAGXuKWzcXM3sC6rFMxgmZm2ImkStsXVJEIVWGRt2u8y0vnxL1spI/YKMwpxSDmpUQj8xNJELH0wlqyiS5EBrN4R2/rR8ZrzFd2vSlZzJ4cOZEgf26DEc1bS+c0BYHlWRK2hiL9M7YZ5Sf75C3959UKZsOD5Gn4aqzDEyfaLTprPw5LsUxU9J18Pv0rxgGOJFHp7IB4WRx8TLhb4CryD2KoJyxuito8j9Uhso0Q83qqjBt5UxMouyhYKGHSqUt9ONe9XzS2+PubP9zWpMjNHz+K/z9IgMPUXbGp3u9xbvv8fFD0ttreel/sEB8euXPXS3IQI3chDrLp/GIDWRc6SKQ1VxJVLqGXH4XDpsK1KHEnsOkhGvhjki7eqKwPsofet+JkEhKY9+U8p2pyc9hoMJu1O/C0LgB/FkkFrTJNNdMV5DKOOr/I+OSowOa9oEpxl3yOqhTdSJxugiAXQv/cHdbDTNRuyi+9QOlJ5CvKfMdp5d0ZCTMN5qPNRw==",
+      "request_body_note": "raw sealed bytes; shown here as base64 only for readability (see items.json image thumb_sealed_b64)",
+      "status": 204
+    },
+    {
+      "name": "chunk_upload",
+      "method": "PUT",
+      "path": "/api/items/01a0c36d-10e0-7a56-86e3-483e2f79d9c5/chunks/0",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw",
+        "Content-Type": "application/octet-stream"
+      },
+      "request_body_note": "raw sealed chunk bytes (4194332 bytes for a full chunk); see items.json large chunks[0]",
+      "status": 204
+    },
+    {
+      "name": "chunk_upload_too_large",
+      "method": "PUT",
+      "path": "/api/items/01a0c36d-10e0-7a56-86e3-483e2f79d9c5/chunks/0",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw",
+        "Content-Type": "application/octet-stream"
+      },
+      "request_body_note": "4194333 bytes",
+      "status": 413,
+      "response_body": {
+        "code": "body_too_large",
+        "message": "chunk body must be at most 4194332 bytes"
+      }
+    },
+    {
+      "name": "chunk_upload_disk_low",
+      "method": "PUT",
+      "path": "/api/items/01a0c36d-10e0-7a56-86e3-483e2f79d9c5/chunks/0",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw",
+        "Content-Type": "application/octet-stream"
+      },
+      "request_body_note": "4194332 bytes",
+      "status": 507,
+      "response_body": {
+        "code": "disk_low",
+        "message": "server disk is low; uploads larger than 1 MiB are rejected"
+      }
+    },
+    {
+      "name": "chunk_upload_after_commit",
+      "method": "PUT",
+      "path": "/api/items/01a0c368-81e2-7460-8f15-1684608b9fb9/chunks/0",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw",
+        "Content-Type": "application/octet-stream"
+      },
+      "request_body_note": "any bytes",
+      "status": 409,
+      "response_body": {
+        "code": "already_committed",
+        "message": "item is already committed"
+      }
+    },
+    {
+      "name": "commit",
+      "method": "POST",
+      "path": "/api/items/01a0c36d-10e0-7a56-86e3-483e2f79d9c5/commit",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw",
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "kind": "files",
+        "size": 8389639,
+        "chunk_count": 3,
+        "content_hash": "e4684803f912ef0a936551a983a63a2681784ef3e5c83f53359f4a3ecb4ee4cf",
+        "meta": "Oerfcs5oxyNUHpsgFqW9AUF+/xvklVxrY/tB8/lUBE8qIwFvIMM4Eo9QP+M5RCpHUZOOQNg5kARZAOal1hIcud2NosBZ5mPx0co7z6oeOD7Ncyhjf/CuRVqDfy6GwsyBxlKWagptrKK4CuPTmVBwcJ/5pa3Y/yrokS5Sbwl6qDX0m4noFwTcDMDfOaunVAjEVE/MLzeK5T5BG/H1VezIEArrAKSZBCRCFTHt13hb/lBpJfWctuwLpKIiA16zo6LCqk+FzEA8iki4vsVXU19HY7tagNU+0zPADZcNOrlUsaOlLBc8Qb6rKEClPHhqCws="
+      },
+      "status": 201,
+      "response_body": {
+        "id": "01a0c36d-10e0-7a56-86e3-483e2f79d9c5",
+        "seq": 44,
+        "device_id": "01a05c00-03e0-7c59-b16c-c1bb2928ae88",
+        "kind": "files",
+        "size": 8389639,
+        "chunk_count": 3,
+        "created_at": "2026-09-21T10:05:00.000Z",
+        "pinned": false,
+        "content_hash": "e4684803f912ef0a936551a983a63a2681784ef3e5c83f53359f4a3ecb4ee4cf",
+        "has_thumb": false,
+        "stored_bytes": 8389962,
+        "meta": "Oerfcs5oxyNUHpsgFqW9AUF+/xvklVxrY/tB8/lUBE8qIwFvIMM4Eo9QP+M5RCpHUZOOQNg5kARZAOal1hIcud2NosBZ5mPx0co7z6oeOD7Ncyhjf/CuRVqDfy6GwsyBxlKWagptrKK4CuPTmVBwcJ/5pa3Y/yrokS5Sbwl6qDX0m4noFwTcDMDfOaunVAjEVE/MLzeK5T5BG/H1VezIEArrAKSZBCRCFTHt13hb/lBpJfWctuwLpKIiA16zo6LCqk+FzEA8iki4vsVXU19HY7tagNU+0zPADZcNOrlUsaOlLBc8Qb6rKEClPHhqCws="
+      }
+    },
+    {
+      "name": "commit_missing_chunks",
+      "method": "POST",
+      "path": "/api/items/01a0c36d-10e0-7a56-86e3-483e2f79d9c5/commit",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw",
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "kind": "files",
+        "size": 8389639,
+        "chunk_count": 3,
+        "content_hash": "e4684803f912ef0a936551a983a63a2681784ef3e5c83f53359f4a3ecb4ee4cf",
+        "meta": "Oerfcs5oxyNUHpsgFqW9AUF+/xvklVxrY/tB8/lUBE8qIwFvIMM4Eo9QP+M5RCpHUZOOQNg5kARZAOal1hIcud2NosBZ5mPx0co7z6oeOD7Ncyhjf/CuRVqDfy6GwsyBxlKWagptrKK4CuPTmVBwcJ/5pa3Y/yrokS5Sbwl6qDX0m4noFwTcDMDfOaunVAjEVE/MLzeK5T5BG/H1VezIEArrAKSZBCRCFTHt13hb/lBpJfWctuwLpKIiA16zo6LCqk+FzEA8iki4vsVXU19HY7tagNU+0zPADZcNOrlUsaOlLBc8Qb6rKEClPHhqCws="
+      },
+      "status": 409,
+      "response_body": {
+        "code": "missing_chunks",
+        "message": "not all chunks were uploaded",
+        "details": {
+          "missing": [
+            1,
+            2
+          ]
+        }
+      }
+    },
+    {
+      "name": "commit_chunk_size_mismatch",
+      "method": "POST",
+      "path": "/api/items/01a0c36d-10e0-7a56-86e3-483e2f79d9c5/commit",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw",
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "kind": "files",
+        "size": 8389639,
+        "chunk_count": 3,
+        "content_hash": "e4684803f912ef0a936551a983a63a2681784ef3e5c83f53359f4a3ecb4ee4cf",
+        "meta": "Oerfcs5oxyNUHpsgFqW9AUF+/xvklVxrY/tB8/lUBE8qIwFvIMM4Eo9QP+M5RCpHUZOOQNg5kARZAOal1hIcud2NosBZ5mPx0co7z6oeOD7Ncyhjf/CuRVqDfy6GwsyBxlKWagptrKK4CuPTmVBwcJ/5pa3Y/yrokS5Sbwl6qDX0m4noFwTcDMDfOaunVAjEVE/MLzeK5T5BG/H1VezIEArrAKSZBCRCFTHt13hb/lBpJfWctuwLpKIiA16zo6LCqk+FzEA8iki4vsVXU19HY7tagNU+0zPADZcNOrlUsaOlLBc8Qb6rKEClPHhqCws="
+      },
+      "status": 400,
+      "response_body": {
+        "code": "size_mismatch",
+        "message": "chunk 2 has 1056 bytes, expected 1059",
+        "details": {
+          "index": 2,
+          "expected": 1059,
+          "actual": 1056
+        }
+      }
+    },
+    {
+      "name": "commit_item_too_large",
+      "method": "POST",
+      "path": "/api/items/01a0c36d-10e0-7a56-86e3-483e2f79d9c5/commit",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw",
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "kind": "files",
+        "size": 8389639,
+        "chunk_count": 3,
+        "content_hash": "e4684803f912ef0a936551a983a63a2681784ef3e5c83f53359f4a3ecb4ee4cf",
+        "meta": "Oerfcs5oxyNUHpsgFqW9AUF+/xvklVxrY/tB8/lUBE8qIwFvIMM4Eo9QP+M5RCpHUZOOQNg5kARZAOal1hIcud2NosBZ5mPx0co7z6oeOD7Ncyhjf/CuRVqDfy6GwsyBxlKWagptrKK4CuPTmVBwcJ/5pa3Y/yrokS5Sbwl6qDX0m4noFwTcDMDfOaunVAjEVE/MLzeK5T5BG/H1VezIEArrAKSZBCRCFTHt13hb/lBpJfWctuwLpKIiA16zo6LCqk+FzEA8iki4vsVXU19HY7tagNU+0zPADZcNOrlUsaOlLBc8Qb6rKEClPHhqCws="
+      },
+      "status": 413,
+      "response_body": {
+        "code": "item_too_large",
+        "message": "item does not fit in storage even after retention"
+      }
+    },
+    {
+      "name": "item_get_inline",
+      "method": "GET",
+      "path": "/api/items/01a0c368-81e2-7460-8f15-1684608b9fb9",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw"
+      },
+      "status": 200,
+      "response_body": {
+        "id": "01a0c368-81e2-7460-8f15-1684608b9fb9",
+        "seq": 41,
+        "device_id": "01a05c00-03e0-7c59-b16c-c1bb2928ae88",
+        "kind": "text",
+        "size": 43,
+        "chunk_count": 0,
+        "created_at": "2026-09-21T10:00:01.250Z",
+        "pinned": false,
+        "content_hash": "290c70322c58faf004eec4c41a380b481cdaa8eee960b518d4a52798d4a77bce",
+        "has_thumb": false,
+        "stored_bytes": 296,
+        "meta": "Af5OkAJ/LaHmj0hEWsYJLtZg0xlwrfQ3OjcZ85zhI2aQysDqXOymJbcQHuTZsAMSZgLwtVjl2Aw7z0Jp/UrWAiw9t4hpsxYgP2v+uFATO/6KXWLQtOu0bCJEZDYRj99udfKm5w7wap0argGWf4I++Dd75jcPST7PaqB33s584KEZwEmelHJjw4LqDj7D5xWwISezTypPFNQevYQQthBC56xAFudQX6gAFAXjiihAH6U8sWa/b8GVTwb3DNwE23RiqKvTeo0YaH76EYYeaYyK60GK2gY11lWYRhQr0Sp14gyH",
+        "payload": "UjA4CngQl2UQ8Z2gllyUAhY0/WiW5TKpOs4wZuCOLffA7bMz41UIFWopPdmRpmISx8ZLzSjbz9q8qdD/Snb3YzbhrD3w0ts="
+      }
+    },
+    {
+      "name": "item_get_chunked",
+      "method": "GET",
+      "path": "/api/items/01a0c36d-10e0-7a56-86e3-483e2f79d9c5",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw"
+      },
+      "status": 200,
+      "response_body": {
+        "id": "01a0c36d-10e0-7a56-86e3-483e2f79d9c5",
+        "seq": 44,
+        "device_id": "01a05c00-03e0-7c59-b16c-c1bb2928ae88",
+        "kind": "files",
+        "size": 8389639,
+        "chunk_count": 3,
+        "created_at": "2026-09-21T10:05:00.000Z",
+        "pinned": false,
+        "content_hash": "e4684803f912ef0a936551a983a63a2681784ef3e5c83f53359f4a3ecb4ee4cf",
+        "has_thumb": false,
+        "stored_bytes": 8389962,
+        "meta": "Oerfcs5oxyNUHpsgFqW9AUF+/xvklVxrY/tB8/lUBE8qIwFvIMM4Eo9QP+M5RCpHUZOOQNg5kARZAOal1hIcud2NosBZ5mPx0co7z6oeOD7Ncyhjf/CuRVqDfy6GwsyBxlKWagptrKK4CuPTmVBwcJ/5pa3Y/yrokS5Sbwl6qDX0m4noFwTcDMDfOaunVAjEVE/MLzeK5T5BG/H1VezIEArrAKSZBCRCFTHt13hb/lBpJfWctuwLpKIiA16zo6LCqk+FzEA8iki4vsVXU19HY7tagNU+0zPADZcNOrlUsaOlLBc8Qb6rKEClPHhqCws="
+      }
+    },
+    {
+      "name": "item_get_not_found",
+      "method": "GET",
+      "path": "/api/items/01926f3c-8d2a-7b3e-9f10-0123456789ab",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw"
+      },
+      "status": 404,
+      "response_body": {
+        "code": "not_found",
+        "message": "item not found"
+      }
+    },
+    {
+      "name": "item_get_invalid_id",
+      "method": "GET",
+      "path": "/api/items/not-a-uuid",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw"
+      },
+      "status": 400,
+      "response_body": {
+        "code": "invalid_id",
+        "message": "id must be a lowercase UUIDv7"
+      }
+    },
+    {
+      "name": "chunk_download",
+      "method": "GET",
+      "path": "/api/items/01a0c36d-10e0-7a56-86e3-483e2f79d9c5/chunks/2",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw"
+      },
+      "status": 200,
+      "response_headers": {
+        "Content-Type": "application/octet-stream",
+        "Content-Length": "1059"
+      },
+      "response_body_note": "raw sealed chunk bytes; see items.json large chunks[2]"
+    },
+    {
+      "name": "thumb_download",
+      "method": "GET",
+      "path": "/api/items/01a0c36a-51c0-7566-9bdc-1a69e5f053c0/thumb",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw"
+      },
+      "status": 200,
+      "response_headers": {
+        "Content-Type": "application/octet-stream",
+        "Content-Length": "679"
+      },
+      "response_body": "jqyC5IbCJTibR6Jcxrb4lKxgHrEUEthb5PQWydTsBfh4ysPiPuGouLIpze+d/NPFnBAjXAiMr8AO+PkWQwJvJ7WKiqrFm89ENRxItRjZJdEKw9KfUuj+FXg0nSKBiVfNleEBeNeobqbF6A62sICAqMrlqikykiqisrIQRchgMFL1ntjqvjdRkDpZ2N5561HEy7rRb2hcSGkP40j2HhGIbBBMl2dPZ1V5NMtHIUf/1IScPPwmCiEn+uTfP2HuPIVlNZ2+u4Kw5i0dbJKlFYUpkUTbBsX3St1GiSuKtpQPliD1exHuIB6fD4N9LrSC//barmOpKdyUDBAn3YifvzLdlzgGHWlXC2xe+KNONcfkk8h8fWkDkMbJcBHB/MpmtDcI6dUDEQ1neobiO/5hYlAGXuKWzcXM3sC6rFMxgmZm2ImkStsXVJEIVWGRt2u8y0vnxL1spI/YKMwpxSDmpUQj8xNJELH0wlqyiS5EBrN4R2/rR8ZrzFd2vSlZzJ4cOZEgf26DEc1bS+c0BYHlWRK2hiL9M7YZ5Sf75C3959UKZsOD5Gn4aqzDEyfaLTprPw5LsUxU9J18Pv0rxgGOJFHp7IB4WRx8TLhb4CryD2KoJyxuito8j9Uhso0Q83qqjBt5UxMouyhYKGHSqUt9ONe9XzS2+PubP9zWpMjNHz+K/z9IgMPUXbGp3u9xbvv8fFD0ttreel/sEB8euXPXS3IQI3chDrLp/GIDWRc6SKQ1VxJVLqGXH4XDpsK1KHEnsOkhGvhjki7eqKwPsofet+JkEhKY9+U8p2pyc9hoMJu1O/C0LgB/FkkFrTJNNdMV5DKOOr/I+OSowOa9oEpxl3yOqhTdSJxugiAXQv/cHdbDTNRuyi+9QOlJ5CvKfMdp5d0ZCTMN5qPNRw==",
+      "response_body_note": "raw sealed bytes; shown here as base64 only for readability"
+    },
+    {
+      "name": "history_newest",
+      "method": "GET",
+      "path": "/api/history?limit=3",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw"
+      },
+      "status": 200,
+      "response_body": {
+        "items": [
+          {
+            "id": "01a0c36d-10e0-7a56-86e3-483e2f79d9c5",
+            "seq": 44,
+            "device_id": "01a05c00-03e0-7c59-b16c-c1bb2928ae88",
+            "kind": "files",
+            "size": 8389639,
+            "chunk_count": 3,
+            "created_at": "2026-09-21T10:05:00.000Z",
+            "pinned": false,
+            "content_hash": "e4684803f912ef0a936551a983a63a2681784ef3e5c83f53359f4a3ecb4ee4cf",
+            "has_thumb": false,
+            "stored_bytes": 8389962,
+            "meta": "Oerfcs5oxyNUHpsgFqW9AUF+/xvklVxrY/tB8/lUBE8qIwFvIMM4Eo9QP+M5RCpHUZOOQNg5kARZAOal1hIcud2NosBZ5mPx0co7z6oeOD7Ncyhjf/CuRVqDfy6GwsyBxlKWagptrKK4CuPTmVBwcJ/5pa3Y/yrokS5Sbwl6qDX0m4noFwTcDMDfOaunVAjEVE/MLzeK5T5BG/H1VezIEArrAKSZBCRCFTHt13hb/lBpJfWctuwLpKIiA16zo6LCqk+FzEA8iki4vsVXU19HY7tagNU+0zPADZcNOrlUsaOlLBc8Qb6rKEClPHhqCws="
+          },
+          {
+            "id": "01a0c36b-3c20-7558-a621-6f947a818022",
+            "seq": 43,
+            "device_id": "01a06158-ba80-7326-af5c-c9255f9309c8",
+            "kind": "files",
+            "size": 101,
+            "chunk_count": 0,
+            "created_at": "2026-09-21T10:03:00.000Z",
+            "pinned": true,
+            "content_hash": "00337758d7972d3f6742c9141f30fd0defb3d960e2fb84afa918356e3b8f6631",
+            "has_thumb": false,
+            "stored_bytes": 456,
+            "meta": "Dqd3hInj/8Pd4bRTXTM6yWp/ywKkSb7gnnW0PCdUgtaeplZ6l5DuFN9w1rjpn1vQ9RIIuCb7WMkQBhXhohG+bZNMWCbmUHxBa42qObqFV+PLaNJJ2rGI5jhursN0beKg4Wv/e1ZuQaPhOenk2rAJJwzl5YNHGND8FJC/KgkO7q0j8GuwHZCA02+rCxYi7JRC2pHiT3uE9dWlFyXvF9LFOFHR0nadvcTGv3p+c37bhSvSh8UNBxaA6gFDARER9iX1Et5VLOCT0oi2MiVXCvWuo/gzF1WHBpLTikbYw9485k2pfycjF0GFj6rdm6AiL7QkoQ+smWfAPskso+PNAU33YICHu1s3FXSPK+6G7Mr9c6w9jRBRApZQU/+sQMT3Qar4q3C+TFbWEhHst/FU0sZGryze55yDrh+N55TeENcgpijlXM0qGjV1"
+          },
+          {
+            "id": "01a0c36a-51c0-7566-9bdc-1a69e5f053c0",
+            "seq": 42,
+            "device_id": "01a05c04-97c0-7c1c-bdb7-1933ae6945c4",
+            "kind": "image",
+            "size": 109,
+            "chunk_count": 0,
+            "created_at": "2026-09-21T10:02:00.000Z",
+            "pinned": false,
+            "content_hash": "bf7b3491c9bb896212220796654f935f8198650fb591bdb4b8ad6b7c360b8c18",
+            "has_thumb": true,
+            "stored_bytes": 990,
+            "meta": "7K1F8t8wb0fOU77llN/kP+HTqSpDy6amPJGOYIcGU9DbDG/DlUipgC6CzNwZGaaKc11QIMCC5+Z1jwznPByyZTndPSNyjHHKHBYfi1aI4uTf64oQ9h1uyQqkV/y3HKvWXSmmC79SvkZ3PAhh/S/5nfFft0qzrXiy9gGW1/TV3ahmGkGLH9cSKAE0baM4XY4pI1pJdxRoqys1hIWnvDXf29gr+iaDgRbV/7SmY0V5"
+          }
+        ],
+        "has_more": true
+      }
+    },
+    {
+      "name": "history_before",
+      "method": "GET",
+      "path": "/api/history?before=42&limit=100",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw"
+      },
+      "status": 200,
+      "response_body": {
+        "items": [
+          {
+            "id": "01a0c368-81e2-7460-8f15-1684608b9fb9",
+            "seq": 41,
+            "device_id": "01a05c00-03e0-7c59-b16c-c1bb2928ae88",
+            "kind": "text",
+            "size": 43,
+            "chunk_count": 0,
+            "created_at": "2026-09-21T10:00:01.250Z",
+            "pinned": false,
+            "content_hash": "290c70322c58faf004eec4c41a380b481cdaa8eee960b518d4a52798d4a77bce",
+            "has_thumb": false,
+            "stored_bytes": 296,
+            "meta": "Af5OkAJ/LaHmj0hEWsYJLtZg0xlwrfQ3OjcZ85zhI2aQysDqXOymJbcQHuTZsAMSZgLwtVjl2Aw7z0Jp/UrWAiw9t4hpsxYgP2v+uFATO/6KXWLQtOu0bCJEZDYRj99udfKm5w7wap0argGWf4I++Dd75jcPST7PaqB33s584KEZwEmelHJjw4LqDj7D5xWwISezTypPFNQevYQQthBC56xAFudQX6gAFAXjiihAH6U8sWa/b8GVTwb3DNwE23RiqKvTeo0YaH76EYYeaYyK60GK2gY11lWYRhQr0Sp14gyH"
+          }
+        ],
+        "has_more": false
+      }
+    },
+    {
+      "name": "history_after_catch_up",
+      "method": "GET",
+      "path": "/api/history?after=40",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw"
+      },
+      "status": 200,
+      "response_body": {
+        "items": [
+          {
+            "id": "01a0c368-81e2-7460-8f15-1684608b9fb9",
+            "seq": 41,
+            "device_id": "01a05c00-03e0-7c59-b16c-c1bb2928ae88",
+            "kind": "text",
+            "size": 43,
+            "chunk_count": 0,
+            "created_at": "2026-09-21T10:00:01.250Z",
+            "pinned": false,
+            "content_hash": "290c70322c58faf004eec4c41a380b481cdaa8eee960b518d4a52798d4a77bce",
+            "has_thumb": false,
+            "stored_bytes": 296,
+            "meta": "Af5OkAJ/LaHmj0hEWsYJLtZg0xlwrfQ3OjcZ85zhI2aQysDqXOymJbcQHuTZsAMSZgLwtVjl2Aw7z0Jp/UrWAiw9t4hpsxYgP2v+uFATO/6KXWLQtOu0bCJEZDYRj99udfKm5w7wap0argGWf4I++Dd75jcPST7PaqB33s584KEZwEmelHJjw4LqDj7D5xWwISezTypPFNQevYQQthBC56xAFudQX6gAFAXjiihAH6U8sWa/b8GVTwb3DNwE23RiqKvTeo0YaH76EYYeaYyK60GK2gY11lWYRhQr0Sp14gyH"
+          },
+          {
+            "id": "01a0c36a-51c0-7566-9bdc-1a69e5f053c0",
+            "seq": 42,
+            "device_id": "01a05c04-97c0-7c1c-bdb7-1933ae6945c4",
+            "kind": "image",
+            "size": 109,
+            "chunk_count": 0,
+            "created_at": "2026-09-21T10:02:00.000Z",
+            "pinned": false,
+            "content_hash": "bf7b3491c9bb896212220796654f935f8198650fb591bdb4b8ad6b7c360b8c18",
+            "has_thumb": true,
+            "stored_bytes": 990,
+            "meta": "7K1F8t8wb0fOU77llN/kP+HTqSpDy6amPJGOYIcGU9DbDG/DlUipgC6CzNwZGaaKc11QIMCC5+Z1jwznPByyZTndPSNyjHHKHBYfi1aI4uTf64oQ9h1uyQqkV/y3HKvWXSmmC79SvkZ3PAhh/S/5nfFft0qzrXiy9gGW1/TV3ahmGkGLH9cSKAE0baM4XY4pI1pJdxRoqys1hIWnvDXf29gr+iaDgRbV/7SmY0V5"
+          },
+          {
+            "id": "01a0c36b-3c20-7558-a621-6f947a818022",
+            "seq": 43,
+            "device_id": "01a06158-ba80-7326-af5c-c9255f9309c8",
+            "kind": "files",
+            "size": 101,
+            "chunk_count": 0,
+            "created_at": "2026-09-21T10:03:00.000Z",
+            "pinned": true,
+            "content_hash": "00337758d7972d3f6742c9141f30fd0defb3d960e2fb84afa918356e3b8f6631",
+            "has_thumb": false,
+            "stored_bytes": 456,
+            "meta": "Dqd3hInj/8Pd4bRTXTM6yWp/ywKkSb7gnnW0PCdUgtaeplZ6l5DuFN9w1rjpn1vQ9RIIuCb7WMkQBhXhohG+bZNMWCbmUHxBa42qObqFV+PLaNJJ2rGI5jhursN0beKg4Wv/e1ZuQaPhOenk2rAJJwzl5YNHGND8FJC/KgkO7q0j8GuwHZCA02+rCxYi7JRC2pHiT3uE9dWlFyXvF9LFOFHR0nadvcTGv3p+c37bhSvSh8UNBxaA6gFDARER9iX1Et5VLOCT0oi2MiVXCvWuo/gzF1WHBpLTikbYw9485k2pfycjF0GFj6rdm6AiL7QkoQ+smWfAPskso+PNAU33YICHu1s3FXSPK+6G7Mr9c6w9jRBRApZQU/+sQMT3Qar4q3C+TFbWEhHst/FU0sZGryze55yDrh+N55TeENcgpijlXM0qGjV1"
+          },
+          {
+            "id": "01a0c36d-10e0-7a56-86e3-483e2f79d9c5",
+            "seq": 44,
+            "device_id": "01a05c00-03e0-7c59-b16c-c1bb2928ae88",
+            "kind": "files",
+            "size": 8389639,
+            "chunk_count": 3,
+            "created_at": "2026-09-21T10:05:00.000Z",
+            "pinned": false,
+            "content_hash": "e4684803f912ef0a936551a983a63a2681784ef3e5c83f53359f4a3ecb4ee4cf",
+            "has_thumb": false,
+            "stored_bytes": 8389962,
+            "meta": "Oerfcs5oxyNUHpsgFqW9AUF+/xvklVxrY/tB8/lUBE8qIwFvIMM4Eo9QP+M5RCpHUZOOQNg5kARZAOal1hIcud2NosBZ5mPx0co7z6oeOD7Ncyhjf/CuRVqDfy6GwsyBxlKWagptrKK4CuPTmVBwcJ/5pa3Y/yrokS5Sbwl6qDX0m4noFwTcDMDfOaunVAjEVE/MLzeK5T5BG/H1VezIEArrAKSZBCRCFTHt13hb/lBpJfWctuwLpKIiA16zo6LCqk+FzEA8iki4vsVXU19HY7tagNU+0zPADZcNOrlUsaOlLBc8Qb6rKEClPHhqCws="
+          }
+        ],
+        "has_more": false
+      }
+    },
+    {
+      "name": "history_bad_params",
+      "method": "GET",
+      "path": "/api/history?before=10&after=5",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw"
+      },
+      "status": 400,
+      "response_body": {
+        "code": "invalid_request",
+        "message": "before and after are mutually exclusive"
+      }
+    },
+    {
+      "name": "history_index",
+      "method": "GET",
+      "path": "/api/history/index",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw"
+      },
+      "status": 200,
+      "response_body": {
+        "current_seq": 44,
+        "state_rev": 17,
+        "items": [
+          {
+            "id": "01a0c368-81e2-7460-8f15-1684608b9fb9",
+            "seq": 41,
+            "pinned": false
+          },
+          {
+            "id": "01a0c36a-51c0-7566-9bdc-1a69e5f053c0",
+            "seq": 42,
+            "pinned": false
+          },
+          {
+            "id": "01a0c36b-3c20-7558-a621-6f947a818022",
+            "seq": 43,
+            "pinned": true
+          },
+          {
+            "id": "01a0c36d-10e0-7a56-86e3-483e2f79d9c5",
+            "seq": 44,
+            "pinned": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "pin",
+      "method": "POST",
+      "path": "/api/items/01a0c368-81e2-7460-8f15-1684608b9fb9/pin",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw",
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "pinned": true
+      },
+      "status": 200,
+      "response_body": {
+        "id": "01a0c368-81e2-7460-8f15-1684608b9fb9",
+        "seq": 41,
+        "device_id": "01a05c00-03e0-7c59-b16c-c1bb2928ae88",
+        "kind": "text",
+        "size": 43,
+        "chunk_count": 0,
+        "created_at": "2026-09-21T10:00:01.250Z",
+        "pinned": true,
+        "content_hash": "290c70322c58faf004eec4c41a380b481cdaa8eee960b518d4a52798d4a77bce",
+        "has_thumb": false,
+        "stored_bytes": 296,
+        "meta": "Af5OkAJ/LaHmj0hEWsYJLtZg0xlwrfQ3OjcZ85zhI2aQysDqXOymJbcQHuTZsAMSZgLwtVjl2Aw7z0Jp/UrWAiw9t4hpsxYgP2v+uFATO/6KXWLQtOu0bCJEZDYRj99udfKm5w7wap0argGWf4I++Dd75jcPST7PaqB33s584KEZwEmelHJjw4LqDj7D5xWwISezTypPFNQevYQQthBC56xAFudQX6gAFAXjiihAH6U8sWa/b8GVTwb3DNwE23RiqKvTeo0YaH76EYYeaYyK60GK2gY11lWYRhQr0Sp14gyH"
+      }
+    },
+    {
+      "name": "unpin",
+      "method": "POST",
+      "path": "/api/items/01a0c36b-3c20-7558-a621-6f947a818022/pin",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw",
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "pinned": false
+      },
+      "status": 200,
+      "response_body": {
+        "id": "01a0c36b-3c20-7558-a621-6f947a818022",
+        "seq": 43,
+        "device_id": "01a06158-ba80-7326-af5c-c9255f9309c8",
+        "kind": "files",
+        "size": 101,
+        "chunk_count": 0,
+        "created_at": "2026-09-21T10:03:00.000Z",
+        "pinned": false,
+        "content_hash": "00337758d7972d3f6742c9141f30fd0defb3d960e2fb84afa918356e3b8f6631",
+        "has_thumb": false,
+        "stored_bytes": 456,
+        "meta": "Dqd3hInj/8Pd4bRTXTM6yWp/ywKkSb7gnnW0PCdUgtaeplZ6l5DuFN9w1rjpn1vQ9RIIuCb7WMkQBhXhohG+bZNMWCbmUHxBa42qObqFV+PLaNJJ2rGI5jhursN0beKg4Wv/e1ZuQaPhOenk2rAJJwzl5YNHGND8FJC/KgkO7q0j8GuwHZCA02+rCxYi7JRC2pHiT3uE9dWlFyXvF9LFOFHR0nadvcTGv3p+c37bhSvSh8UNBxaA6gFDARER9iX1Et5VLOCT0oi2MiVXCvWuo/gzF1WHBpLTikbYw9485k2pfycjF0GFj6rdm6AiL7QkoQ+smWfAPskso+PNAU33YICHu1s3FXSPK+6G7Mr9c6w9jRBRApZQU/+sQMT3Qar4q3C+TFbWEhHst/FU0sZGryze55yDrh+N55TeENcgpijlXM0qGjV1"
+      }
+    },
+    {
+      "name": "pin_limit",
+      "method": "POST",
+      "path": "/api/items/01a0c36d-10e0-7a56-86e3-483e2f79d9c5/pin",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw",
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "pinned": true
+      },
+      "status": 409,
+      "response_body": {
+        "code": "pinned_limit",
+        "message": "pinning this item would exceed the pinned storage limit"
+      }
+    },
+    {
+      "name": "item_delete",
+      "method": "DELETE",
+      "path": "/api/items/01a0c36a-51c0-7566-9bdc-1a69e5f053c0",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw"
+      },
+      "status": 204
+    },
+    {
+      "name": "storage",
+      "method": "GET",
+      "path": "/api/storage",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw"
+      },
+      "status": 200,
+      "response_body": {
+        "used_bytes": 8391704,
+        "limit_bytes": 5368709120,
+        "pinned_bytes": 456,
+        "pinned_limit_bytes": 1073741824,
+        "item_count": 4,
+        "free_disk_bytes": 11811160064,
+        "min_free_disk_bytes": 2147483648,
+        "retention_days": 7,
+        "disk_low": false
+      }
+    },
+    {
+      "name": "healthz",
+      "method": "GET",
+      "path": "/healthz",
+      "status": 200,
+      "response_body": {
+        "status": "ok",
+        "server_version": "1.0.0",
+        "protocol_version": 1
+      }
+    },
+    {
+      "name": "ws_upgrade_unauthorized",
+      "method": "GET",
+      "path": "/ws?token=yc_invalidtokeninvalidtokeninvalidtokeninval",
+      "request_headers": {
+        "Connection": "Upgrade",
+        "Upgrade": "websocket",
+        "Sec-WebSocket-Version": "13"
+      },
+      "status": 401,
+      "response_body": {
+        "code": "unauthorized",
+        "message": "missing, invalid or revoked token"
+      }
+    },
+    {
+      "name": "unknown_route",
+      "method": "GET",
+      "path": "/api/nope",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw"
+      },
+      "status": 404,
+      "response_body": {
+        "code": "not_found",
+        "message": "route not found"
+      }
+    },
+    {
+      "name": "method_not_allowed",
+      "method": "PUT",
+      "path": "/api/history",
+      "request_headers": {
+        "Authorization": "Bearer yc_WMmC_xkE6-ZpL_QDaSgkhu0mZPAO1jhw3PEkbkI4Ipw"
+      },
+      "status": 405,
+      "response_body": {
+        "code": "method_not_allowed",
+        "message": "method not allowed"
+      }
+    }
+  ]
+}

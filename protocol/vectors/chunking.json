@@ -1,0 +1,103 @@
+{
+  "description": "Inline if size <= 262144, otherwise chunk_count = ceil(size / 4194304). Every chunk except the last has exactly 4194304 plaintext bytes. Sealed length = plaintext length + 28.",
+  "inline_max_bytes": 262144,
+  "chunk_size_bytes": 4194304,
+  "seal_overhead_bytes": 28,
+  "cases": [
+    {
+      "size": 1,
+      "inline": true,
+      "chunk_count": 0,
+      "payload_sealed_length": 29
+    },
+    {
+      "size": 262143,
+      "inline": true,
+      "chunk_count": 0,
+      "payload_sealed_length": 262171
+    },
+    {
+      "size": 262144,
+      "inline": true,
+      "chunk_count": 0,
+      "payload_sealed_length": 262172
+    },
+    {
+      "size": 262145,
+      "inline": false,
+      "chunk_count": 1,
+      "full_chunk_plaintext_size": 4194304,
+      "full_chunk_sealed_length": 4194332,
+      "last_chunk_index": 0,
+      "last_chunk_plaintext_size": 262145,
+      "last_chunk_sealed_length": 262173,
+      "total_chunk_sealed_bytes": 262173
+    },
+    {
+      "size": 4194304,
+      "inline": false,
+      "chunk_count": 1,
+      "full_chunk_plaintext_size": 4194304,
+      "full_chunk_sealed_length": 4194332,
+      "last_chunk_index": 0,
+      "last_chunk_plaintext_size": 4194304,
+      "last_chunk_sealed_length": 4194332,
+      "total_chunk_sealed_bytes": 4194332
+    },
+    {
+      "size": 4194305,
+      "inline": false,
+      "chunk_count": 2,
+      "full_chunk_plaintext_size": 4194304,
+      "full_chunk_sealed_length": 4194332,
+      "last_chunk_index": 1,
+      "last_chunk_plaintext_size": 1,
+      "last_chunk_sealed_length": 29,
+      "total_chunk_sealed_bytes": 4194361
+    },
+    {
+      "size": 8388608,
+      "inline": false,
+      "chunk_count": 2,
+      "full_chunk_plaintext_size": 4194304,
+      "full_chunk_sealed_length": 4194332,
+      "last_chunk_index": 1,
+      "last_chunk_plaintext_size": 4194304,
+      "last_chunk_sealed_length": 4194332,
+      "total_chunk_sealed_bytes": 8388664
+    },
+    {
+      "size": 8389652,
+      "inline": false,
+      "chunk_count": 3,
+      "full_chunk_plaintext_size": 4194304,
+      "full_chunk_sealed_length": 4194332,
+      "last_chunk_index": 2,
+      "last_chunk_plaintext_size": 1044,
+      "last_chunk_sealed_length": 1072,
+      "total_chunk_sealed_bytes": 8389736
+    },
+    {
+      "size": 10485760,
+      "inline": false,
+      "chunk_count": 3,
+      "full_chunk_plaintext_size": 4194304,
+      "full_chunk_sealed_length": 4194332,
+      "last_chunk_index": 2,
+      "last_chunk_plaintext_size": 2097152,
+      "last_chunk_sealed_length": 2097180,
+      "total_chunk_sealed_bytes": 10485844
+    },
+    {
+      "size": 5368709120,
+      "inline": false,
+      "chunk_count": 1280,
+      "full_chunk_plaintext_size": 4194304,
+      "full_chunk_sealed_length": 4194332,
+      "last_chunk_index": 1279,
+      "last_chunk_plaintext_size": 4194304,
+      "last_chunk_sealed_length": 4194332,
+      "total_chunk_sealed_bytes": 5368744960
+    }
+  ]
+}

@@ -1,0 +1,325 @@
+{
+  "description": "Canonical WebSocket text frames (one JSON object per frame). Field order is not significant. Receivers MUST ignore unknown fields and MUST ignore messages whose type they do not know (servers answer those with error unknown_type).",
+  "close_codes": [
+    {
+      "code": 1000,
+      "meaning": "normal close",
+      "client_action": "reconnect with backoff unless the app is quitting or logging out"
+    },
+    {
+      "code": 1001,
+      "meaning": "server shutting down",
+      "client_action": "reconnect with backoff"
+    },
+    {
+      "code": 4001,
+      "meaning": "unauthorized: token revoked or device_mismatch",
+      "client_action": "do not reconnect; require login"
+    },
+    {
+      "code": 4002,
+      "meaning": "closed because the same device opened more than 8 concurrent connections (the oldest is closed)",
+      "client_action": "do not reconnect automatically; reconnect on explicit user action or when the app returns to the foreground"
+    },
+    {
+      "code": 4003,
+      "meaning": "protocol_version_unsupported",
+      "client_action": "do not reconnect; tell the user to update"
+    },
+    {
+      "code": 4004,
+      "meaning": "hello not received within 10 s, or invalid first message",
+      "client_action": "reconnect with backoff"
+    },
+    {
+      "code": 4005,
+      "meaning": "heartbeat timeout (45 s without any message)",
+      "client_action": "reconnect with backoff"
+    }
+  ],
+  "messages": [
+    {
+      "name": "hello",
+      "direction": "client_to_server",
+      "message": {
+        "type": "hello",
+        "protocol_version": 1,
+        "device_id": "01a05c00-03e0-7c59-b16c-c1bb2928ae88",
+        "last_seq": 40,
+        "app_version": "1.0.0",
+        "platform": "macos"
+      }
+    },
+    {
+      "name": "welcome",
+      "direction": "server_to_client",
+      "message": {
+        "type": "welcome",
+        "protocol_version": 1,
+        "server_version": "1.0.0",
+        "server_id": "01a05bfb-7000-7691-98e4-301030971d0c",
+        "server_time": "2026-09-21T10:10:00.000Z",
+        "device_id": "01a05c00-03e0-7c59-b16c-c1bb2928ae88",
+        "current_seq": 44,
+        "state_rev": 17,
+        "online_devices": [
+          {
+            "device_id": "01a05c00-03e0-7c59-b16c-c1bb2928ae88",
+            "name": "Thoriq MacBook Pro",
+            "platform": "macos"
+          },
+          {
+            "device_id": "01a05c04-97c0-7c1c-bdb7-1933ae6945c4",
+            "name": "Pixel 9",
+            "platform": "android"
+          }
+        ]
+      }
+    },
+    {
+      "name": "presence_online",
+      "direction": "server_to_client",
+      "message": {
+        "type": "presence",
+        "device_id": "01a06158-ba80-7326-af5c-c9255f9309c8",
+        "name": "Desktop PC",
+        "platform": "windows",
+        "online": true
+      }
+    },
+    {
+      "name": "presence_offline",
+      "direction": "server_to_client",
+      "message": {
+        "type": "presence",
+        "device_id": "01a06158-ba80-7326-af5c-c9255f9309c8",
+        "name": "Desktop PC",
+        "platform": "windows",
+        "online": false
+      }
+    },
+    {
+      "name": "devices_changed",
+      "direction": "server_to_client",
+      "message": {
+        "type": "devices_changed"
+      }
+    },
+    {
+      "name": "clip_inline_text",
+      "direction": "server_to_client",
+      "message": {
+        "type": "clip",
+        "item": {
+          "id": "01a0c368-81e2-7460-8f15-1684608b9fb9",
+          "seq": 41,
+          "device_id": "01a05c00-03e0-7c59-b16c-c1bb2928ae88",
+          "kind": "text",
+          "size": 43,
+          "chunk_count": 0,
+          "created_at": "2026-09-21T10:00:01.250Z",
+          "pinned": false,
+          "content_hash": "290c70322c58faf004eec4c41a380b481cdaa8eee960b518d4a52798d4a77bce",
+          "has_thumb": false,
+          "stored_bytes": 296,
+          "meta": "Af5OkAJ/LaHmj0hEWsYJLtZg0xlwrfQ3OjcZ85zhI2aQysDqXOymJbcQHuTZsAMSZgLwtVjl2Aw7z0Jp/UrWAiw9t4hpsxYgP2v+uFATO/6KXWLQtOu0bCJEZDYRj99udfKm5w7wap0argGWf4I++Dd75jcPST7PaqB33s584KEZwEmelHJjw4LqDj7D5xWwISezTypPFNQevYQQthBC56xAFudQX6gAFAXjiihAH6U8sWa/b8GVTwb3DNwE23RiqKvTeo0YaH76EYYeaYyK60GK2gY11lWYRhQr0Sp14gyH",
+          "payload": "UjA4CngQl2UQ8Z2gllyUAhY0/WiW5TKpOs4wZuCOLffA7bMz41UIFWopPdmRpmISx8ZLzSjbz9q8qdD/Snb3YzbhrD3w0ts="
+        }
+      }
+    },
+    {
+      "name": "clip_inline_image",
+      "direction": "server_to_client",
+      "message": {
+        "type": "clip",
+        "item": {
+          "id": "01a0c36a-51c0-7566-9bdc-1a69e5f053c0",
+          "seq": 42,
+          "device_id": "01a05c04-97c0-7c1c-bdb7-1933ae6945c4",
+          "kind": "image",
+          "size": 109,
+          "chunk_count": 0,
+          "created_at": "2026-09-21T10:02:00.000Z",
+          "pinned": false,
+          "content_hash": "bf7b3491c9bb896212220796654f935f8198650fb591bdb4b8ad6b7c360b8c18",
+          "has_thumb": true,
+          "stored_bytes": 990,
+          "meta": "7K1F8t8wb0fOU77llN/kP+HTqSpDy6amPJGOYIcGU9DbDG/DlUipgC6CzNwZGaaKc11QIMCC5+Z1jwznPByyZTndPSNyjHHKHBYfi1aI4uTf64oQ9h1uyQqkV/y3HKvWXSmmC79SvkZ3PAhh/S/5nfFft0qzrXiy9gGW1/TV3ahmGkGLH9cSKAE0baM4XY4pI1pJdxRoqys1hIWnvDXf29gr+iaDgRbV/7SmY0V5",
+          "payload": "DCErBW131z6l52LlZe0DM8OKZSyRPv9wHogWkYuZZ3eqn2f2pz4aUvLxqJRsx2w4n3RWdAEzBp6RndAtvGnPB0dyc4dbwtAQbz10ZvBfBn7mtlb0F5FGJk5xuWzZ2be3XsNZmsRMZ9vC34o40W8TKzTUPIfEsP37e2E+ikbp5knFTnwYYn7Jd/g="
+        }
+      }
+    },
+    {
+      "name": "clip_chunked",
+      "direction": "server_to_client",
+      "message": {
+        "type": "clip",
+        "item": {
+          "id": "01a0c36d-10e0-7a56-86e3-483e2f79d9c5",
+          "seq": 44,
+          "device_id": "01a05c00-03e0-7c59-b16c-c1bb2928ae88",
+          "kind": "files",
+          "size": 8389639,
+          "chunk_count": 3,
+          "created_at": "2026-09-21T10:05:00.000Z",
+          "pinned": false,
+          "content_hash": "e4684803f912ef0a936551a983a63a2681784ef3e5c83f53359f4a3ecb4ee4cf",
+          "has_thumb": false,
+          "stored_bytes": 8389962,
+          "meta": "Oerfcs5oxyNUHpsgFqW9AUF+/xvklVxrY/tB8/lUBE8qIwFvIMM4Eo9QP+M5RCpHUZOOQNg5kARZAOal1hIcud2NosBZ5mPx0co7z6oeOD7Ncyhjf/CuRVqDfy6GwsyBxlKWagptrKK4CuPTmVBwcJ/5pa3Y/yrokS5Sbwl6qDX0m4noFwTcDMDfOaunVAjEVE/MLzeK5T5BG/H1VezIEArrAKSZBCRCFTHt13hb/lBpJfWctuwLpKIiA16zo6LCqk+FzEA8iki4vsVXU19HY7tagNU+0zPADZcNOrlUsaOlLBc8Qb6rKEClPHhqCws="
+        }
+      }
+    },
+    {
+      "name": "clip_deleted_user",
+      "direction": "server_to_client",
+      "message": {
+        "type": "clip_deleted",
+        "ids": [
+          "01a0c36a-51c0-7566-9bdc-1a69e5f053c0"
+        ],
+        "reason": "user",
+        "state_rev": 18
+      }
+    },
+    {
+      "name": "clip_deleted_retention",
+      "direction": "server_to_client",
+      "message": {
+        "type": "clip_deleted",
+        "ids": [
+          "01a0c368-81e2-7460-8f15-1684608b9fb9",
+          "01a0c36a-51c0-7566-9bdc-1a69e5f053c0"
+        ],
+        "reason": "retention",
+        "state_rev": 19
+      }
+    },
+    {
+      "name": "clip_deleted_dedupe",
+      "direction": "server_to_client",
+      "message": {
+        "type": "clip_deleted",
+        "ids": [
+          "01a0c368-81e2-7460-8f15-1684608b9fb9"
+        ],
+        "reason": "dedupe",
+        "state_rev": 20
+      }
+    },
+    {
+      "name": "clip_pinned",
+      "direction": "server_to_client",
+      "message": {
+        "type": "clip_pinned",
+        "id": "01a0c368-81e2-7460-8f15-1684608b9fb9",
+        "pinned": true,
+        "state_rev": 21
+      }
+    },
+    {
+      "name": "storage_warning_active",
+      "direction": "server_to_client",
+      "message": {
+        "type": "storage_warning",
+        "active": true,
+        "reason": "disk_low",
+        "free_disk_bytes": 1717986918,
+        "min_free_disk_bytes": 2147483648
+      }
+    },
+    {
+      "name": "storage_warning_cleared",
+      "direction": "server_to_client",
+      "message": {
+        "type": "storage_warning",
+        "active": false,
+        "reason": "disk_low",
+        "free_disk_bytes": 3221225472,
+        "min_free_disk_bytes": 2147483648
+      }
+    },
+    {
+      "name": "ping_from_client",
+      "direction": "client_to_server",
+      "message": {
+        "type": "ping",
+        "ts": 1789985400000
+      }
+    },
+    {
+      "name": "pong_from_server",
+      "direction": "server_to_client",
+      "message": {
+        "type": "pong",
+        "ts": 1789985400000
+      }
+    },
+    {
+      "name": "ping_from_server",
+      "direction": "server_to_client",
+      "message": {
+        "type": "ping",
+        "ts": 1789985420000
+      }
+    },
+    {
+      "name": "pong_from_client",
+      "direction": "client_to_server",
+      "message": {
+        "type": "pong",
+        "ts": 1789985420000
+      }
+    },
+    {
+      "name": "error_protocol_version",
+      "direction": "server_to_client",
+      "message": {
+        "type": "error",
+        "code": "protocol_version_unsupported",
+        "message": "server supports protocol_version 1",
+        "details": {
+          "supported": [
+            1
+          ]
+        }
+      }
+    },
+    {
+      "name": "error_device_mismatch",
+      "direction": "server_to_client",
+      "message": {
+        "type": "error",
+        "code": "device_mismatch",
+        "message": "device_id does not match the token"
+      }
+    },
+    {
+      "name": "error_unknown_type",
+      "direction": "server_to_client",
+      "message": {
+        "type": "error",
+        "code": "unknown_type",
+        "message": "unknown message type: foo"
+      }
+    },
+    {
+      "name": "error_invalid_message",
+      "direction": "server_to_client",
+      "message": {
+        "type": "error",
+        "code": "invalid_message",
+        "message": "frame is not a JSON object with a string type field"
+      }
+    },
+    {
+      "name": "error_not_ready",
+      "direction": "server_to_client",
+      "message": {
+        "type": "error",
+        "code": "hello_required",
+        "message": "the first message must be hello"
+      }
+    }
+  ]
+}
