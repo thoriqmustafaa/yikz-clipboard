@@ -368,7 +368,7 @@ public class UpdaterFlowTests
         {"version":"1.2.0","published_at":"2026-09-22T10:00:00.000Z","notes_md":"### Windows\n- New\n",
          "asset":{"platform":"windows-x64","file":"YikzClipboard-1.2.0-win-x64.zip","size":{{zip.Length}},
          "sha256":"{{Convert.ToHexStringLower(SHA256.HashData(zip))}}","signature":"{{signature}}",
-         "url":"/api/releases/1.2.0/assets/YikzClipboard-1.2.0-win-x64.zip"}}
+         "url":"/api/releases/1.2.0/assets/YikzClipboard-1.2.0-win-x64.zip"} }
         """;
 
     private static (Updater Updater, string Root) Create(byte[] announced, byte[] served, string signature)
