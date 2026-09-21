@@ -3,7 +3,10 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Version>1.0.0</Version>
+    <YikzVersionFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\VERSION'))</YikzVersionFile>
+    <YikzVersion Condition="Exists('$(YikzVersionFile)')">$([System.IO.File]::ReadAllText('$(YikzVersionFile)').Trim())</YikzVersion>
+    <YikzVersion Condition="'$(YikzVersion)' == ''">0.0.0</YikzVersion>
+    <Version Condition="'$(Version)' == ''">$(YikzVersion)</Version>
     <Company>yikz</Company>
     <Product>Yikz Clipboard</Product>
     <Copyright>Copyright (c) yikz</Copyright>

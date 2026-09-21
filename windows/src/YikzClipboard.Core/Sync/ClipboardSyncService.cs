@@ -125,6 +125,7 @@ public sealed class ClipboardSyncService : IAsyncDisposable
             RaiseStatus();
         };
         _engine.Applied += (e, c) => ItemApplied?.Invoke(e, c);
+        _engine.ReleaseAvailable += v => ReleaseAvailable?.Invoke(v);
         _connection = new ConnectionManager(
             transport ?? new ClientWebSocketTransport("YikzClipboard-Windows/" + appVersion),
             BuildTarget,
@@ -227,6 +228,7 @@ public sealed class ClipboardSyncService : IAsyncDisposable
     public event Action<HistoryEntry, ReceivedContent>? ItemApplied;
     public event Action<HistoryEntry>? ItemSent;
     public event Action<TimeSpan>? ReconnectScheduled;
+    public event Action<string>? ReleaseAvailable;
 
     public void Start()
     {

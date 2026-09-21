@@ -34,6 +34,7 @@ namespace YikzClipboard.Core.Protocol;
 [JsonSerializable(typeof(ClipDeletedMessage))]
 [JsonSerializable(typeof(ClipPinnedMessage))]
 [JsonSerializable(typeof(StorageWarningMessage))]
+[JsonSerializable(typeof(ReleaseAvailableMessage))]
 [JsonSerializable(typeof(PingMessage))]
 [JsonSerializable(typeof(PongMessage))]
 [JsonSerializable(typeof(WsErrorMessage))]
