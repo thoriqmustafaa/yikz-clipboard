@@ -337,11 +337,17 @@ jobs:
       - name: Upload assets
         env:
           RELEASE_UPLOAD_TOKEN: ${{ secrets.RELEASE_UPLOAD_TOKEN }}
+          RELEASE_ORIGIN_IP: ${{ secrets.RELEASE_ORIGIN_IP }}
         run: |
           set -euo pipefail
+          origin=()
+          if [ -n "${RELEASE_ORIGIN_IP:-}" ]; then
+            host="${RELEASE_SERVER#https://}"
+            origin=(--resolve "$host:443:$RELEASE_ORIGIN_IP")
+          fi
           for file in $(jq -r '.assets[].file' manifest.json); do
             echo "Uploading $file"
-            curl --fail-with-body --silent --show-error \
+            curl --fail-with-body --silent --show-error --http1.1 "${origin[@]}" \
               --retry 5 --retry-all-errors --retry-delay 10 \
               --connect-timeout 20 --max-time 1800 \
               -X PUT \
@@ -354,9 +360,15 @@ jobs:
       - name: Publish manifest
         env:
           RELEASE_UPLOAD_TOKEN: ${{ secrets.RELEASE_UPLOAD_TOKEN }}
+          RELEASE_ORIGIN_IP: ${{ secrets.RELEASE_ORIGIN_IP }}
         run: |
           set -euo pipefail
-          curl --fail-with-body --silent --show-error \
+          origin=()
+          if [ -n "${RELEASE_ORIGIN_IP:-}" ]; then
+            host="${RELEASE_SERVER#https://}"
+            origin=(--resolve "$host:443:$RELEASE_ORIGIN_IP")
+          fi
+          curl --fail-with-body --silent --show-error --http1.1 "${origin[@]}" \
             --retry 5 --retry-all-errors --retry-delay 10 \
             --connect-timeout 20 --max-time 600 \
             -X PUT \
