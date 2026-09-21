@@ -8,6 +8,7 @@ using YikzClipboard.App.Platform;
 using YikzClipboard.Core.Logging;
 using YikzClipboard.Core.Storage;
 using YikzClipboard.Core.Sync;
+using YikzClipboard.Core.Updates;
 
 namespace YikzClipboard.App.UI;
 
@@ -219,6 +220,15 @@ internal sealed class TrayIconController : IDisposable
         {
             _menu.Items.Add(new MenuFlyoutItem { Text = "Server storage is low", IsEnabled = false });
         }
+        var update = _host.Updater.Status;
+        if (update.Stage == UpdateStage.Ready && update.Prepared != null)
+        {
+            _menu.Items.Add(new MenuFlyoutItem
+            {
+                Text = "Restart to update (" + update.Prepared.Version + ")",
+                Command = new RelayCommand(() => _host.InstallUpdate(true)),
+            });
+        }
         _menu.Items.Add(new MenuFlyoutSeparator());
         var recent = service.IsSignedIn ? service.History.List(8) : new List<HistoryEntry>();
         if (recent.Count == 0)
@@ -264,6 +274,16 @@ internal sealed class TrayIconController : IDisposable
         _menu.Items.Add(new MenuFlyoutSeparator());
         _menu.Items.Add(new MenuFlyoutItem { Text = "Settings", Command = new RelayCommand(() => _host.ShowSettings()) });
         _menu.Items.Add(new MenuFlyoutItem { Text = "Logs", Command = new RelayCommand(() => _host.ShowLogs()) });
+        _menu.Items.Add(new MenuFlyoutItem
+        {
+            Text = "Check for Updates",
+            IsEnabled = service.IsSignedIn && update.Stage is not (UpdateStage.Checking or UpdateStage.Downloading or UpdateStage.Verifying or UpdateStage.Installing),
+            Command = new RelayCommand(() =>
+            {
+                _host.CheckForUpdates(true);
+                _host.ShowSettings("updates");
+            }),
+        });
         _menu.Items.Add(new MenuFlyoutSeparator());
         _menu.Items.Add(new MenuFlyoutItem { Text = "Quit", Command = new RelayCommand(() => _host.Quit()) });
     }

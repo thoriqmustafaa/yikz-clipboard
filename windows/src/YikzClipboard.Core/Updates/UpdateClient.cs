@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Headers;
+using YikzClipboard.Core.Net;
 
 namespace YikzClipboard.Core.Updates;
 
@@ -41,12 +42,12 @@ public sealed class UpdateClient
 
     public static Uri LatestUri(Uri baseUri, string platformKey)
     {
-        return new Uri(Net.ApiClient.NormalizeBase(baseUri), "api/releases/latest?platform=" + Uri.EscapeDataString(platformKey));
+        return new Uri(ApiClient.NormalizeBase(baseUri), "api/releases/latest?platform=" + Uri.EscapeDataString(platformKey));
     }
 
     public static Uri ResolveAssetUri(Uri baseUri, ReleaseAsset asset, string version)
     {
-        var normalized = Net.ApiClient.NormalizeBase(baseUri);
+        var normalized = ApiClient.NormalizeBase(baseUri);
         var url = asset.Url;
         if (!string.IsNullOrEmpty(url))
         {

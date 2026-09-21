@@ -214,7 +214,7 @@ public class UpdateDecisionTests
     {
         var d = UpdatePolicy.Decide(Current, Release(version), "windows-x64");
         Assert.Equal(UpdateAction.Update, d.Action);
-        Assert.Equal(SemVer.Parse(version), d.Version);
+        Assert.Equal(SemVer.Parse(version), d.Version!.Value);
     }
 
     [Fact]

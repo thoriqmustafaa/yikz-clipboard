@@ -6,12 +6,13 @@ using YikzClipboard.Core.Logging;
 using YikzClipboard.Core.Platform;
 using YikzClipboard.Core.Storage;
 using YikzClipboard.Core.Sync;
+using YikzClipboard.Core.Updates;
 
 namespace YikzClipboard.App;
 
 public sealed class AppHost
 {
-    public const string AppVersion = "1.0.0";
+    public static readonly string AppVersion = SemVer.FromAssembly(typeof(AppHost).Assembly).ToString();
 
     private readonly string[] _args;
     private readonly EventWaitHandle _activate;
@@ -29,6 +30,9 @@ public sealed class AppHost
     private HistoryWindow? _history;
     private SettingsWindow? _settingsWindow;
     private LogsWindow? _logsWindow;
+    private DispatcherQueueTimer? _updateTimer;
+    private DispatcherQueueTimer? _installTimer;
+    private bool _autoInstallBlocked;
     private bool _quitting;
 
     internal AppHost(string[] args, EventWaitHandle activate)
@@ -54,6 +58,20 @@ public sealed class AppHost
             Notifier,
             ImageTools,
             AppVersion);
+        var lastChecked = Settings.Current.LastUpdateCheck is long ms ? DateTimeOffset.FromUnixTimeMilliseconds(ms) : (DateTimeOffset?)null;
+        Updater = new Updater(
+            new UpdateClient(UpdateClient.CreateHttpClient(AppVersion), ResolveUpdateEndpoint),
+            SemVer.Parse(AppVersion),
+            UpdatePolicy.CurrentPlatformKey(),
+            Path.Combine(Paths.Root, "updates"),
+            Logger,
+            lastChecked);
+    }
+
+    private UpdateEndpoint? ResolveUpdateEndpoint()
+    {
+        var token = Service.Api.Token;
+        return Service.IsSignedIn && !string.IsNullOrEmpty(token) ? new UpdateEndpoint(Service.Api.BaseUri, token) : null;
     }
 
     internal AppPaths Paths { get; }
@@ -64,6 +82,7 @@ public sealed class AppHost
     internal WindowsClipboardSink Sink { get; }
     internal ClipboardSyncService Service { get; }
     internal ClipboardMonitor? Monitor { get; private set; }
+    internal Updater Updater { get; }
     internal DispatcherQueue Queue => _queue;
     internal string ActiveHotkey => _hotkey?.Active ?? "";
     internal IntPtr MessageWindowHandle => _messageWindow?.Handle ?? IntPtr.Zero;
@@ -112,14 +131,7 @@ public sealed class AppHost
         _uiRefresh.Interval = TimeSpan.FromMilliseconds(120);
         _uiRefresh.IsRepeating = false;
         _uiRefresh.Tick += (_, _) => RefreshUi();
-        try
-        {
-            _tray = new TrayIconController(this);
-        }
-        catch (Exception ex)
-        {
-            Logger.Error("tray", "tray icon could not be created", ex);
-        }
+        ApplyTrayVisibility();
         SyncStartupRegistration();
         Service.Start();
         _maintenance = _queue.CreateTimer();
@@ -127,11 +139,22 @@ public sealed class AppHost
         _maintenance.IsRepeating = true;
         _maintenance.Tick += (_, _) => Task.Run(() => Service.PruneReceivedCache());
         _maintenance.Start();
+        StartUpdater();
         _activateWait = ThreadPool.RegisterWaitForSingleObject(_activate, (_, _) => UiThread.Post(_queue, OnSecondInstance), null, Timeout.Infinite, false);
-        var background = _args.Any(a => string.Equals(a, "--background", StringComparison.OrdinalIgnoreCase));
+        var background = HasArg("--background");
+        if (HasArg("--updated"))
+        {
+            Logger.Info("update", "updated to version " + AppVersion);
+            Notifier.Info("Yikz Clipboard updated", "Version " + AppVersion + " is installed.");
+        }
+        else if (HasArg("--update-failed"))
+        {
+            Logger.Warn("update", "the previous update failed and was rolled back");
+            Notifier.Problem("Update failed", "The update could not be installed and the previous version was restored. See the logs for details.");
+        }
         if (!Service.IsSignedIn || !Service.HasKey)
         {
-            if (!background)
+            if (!background || Settings.Current.IsReachableOnlyByRelaunch && !HasArg("--updated"))
             {
                 ShowSettings();
             }
@@ -140,6 +163,195 @@ public sealed class AppHost
         {
             ShowHistory();
         }
+        EnsureTaskbarEntry();
+    }
+
+    private bool HasArg(string name) => _args.Any(a => string.Equals(a, name, StringComparison.OrdinalIgnoreCase));
+
+    private void ApplyTrayVisibility()
+    {
+        if (_quitting)
+        {
+            return;
+        }
+        if (Settings.Current.ShowTrayIcon)
+        {
+            if (_tray == null)
+            {
+                try
+                {
+                    _tray = new TrayIconController(this);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("tray", "tray icon could not be created", ex);
+                }
+            }
+        }
+        else if (_tray != null)
+        {
+            var tray = _tray;
+            _tray = null;
+            tray.Dispose();
+        }
+    }
+
+    private void EnsureTaskbarEntry()
+    {
+        if (_quitting)
+        {
+            return;
+        }
+        var wanted = Settings.Current.ShowInTaskbar;
+        try
+        {
+            if (_history != null && _history.TaskbarMode != wanted)
+            {
+                _history.SetTaskbarMode(wanted);
+            }
+            if (wanted && Service.IsSignedIn && Service.HasKey)
+            {
+                _history ??= new HistoryWindow(this);
+                _history.ShowInTaskbarMinimized();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("ui", "taskbar entry failed", ex);
+        }
+    }
+
+    internal void SetShowTrayIcon(bool visible)
+    {
+        Settings.Update(s => s.ShowTrayIcon = visible);
+        Logger.Info("app", visible ? "tray icon shown" : "tray icon hidden");
+        ApplyTrayVisibility();
+    }
+
+    internal void SetShowInTaskbar(bool visible)
+    {
+        Settings.Update(s => s.ShowInTaskbar = visible);
+        Logger.Info("app", visible ? "taskbar entry shown" : "taskbar entry hidden");
+        EnsureTaskbarEntry();
+    }
+
+    private void StartUpdater()
+    {
+        _ = Task.Run(() => UpdatePackage.CleanupOldVersions(Updater.UpdatesRoot, Updater.Current));
+        Updater.Checked += t => Settings.Update(s => s.LastUpdateCheck = t.ToUnixTimeMilliseconds());
+        Updater.Changed += _ => UiThread.Post(_queue, OnUpdateChanged);
+        Service.ReleaseAvailable += v =>
+        {
+            Logger.Info("update", "server announced release " + v);
+            UiThread.Post(_queue, () => CheckForUpdates(false));
+        };
+        _updateTimer = _queue.CreateTimer();
+        _updateTimer.Interval = UpdatePolicy.LaunchDelay;
+        _updateTimer.IsRepeating = true;
+        _updateTimer.Tick += (t, _) =>
+        {
+            if (t.Interval != UpdatePolicy.CheckInterval)
+            {
+                t.Interval = UpdatePolicy.CheckInterval;
+            }
+            CheckForUpdates(false);
+        };
+        _updateTimer.Start();
+        _installTimer = _queue.CreateTimer();
+        _installTimer.Interval = TimeSpan.FromMinutes(1);
+        _installTimer.IsRepeating = true;
+        _installTimer.Tick += (_, _) => TryAutoInstall();
+        _installTimer.Start();
+    }
+
+    internal void CheckForUpdates(bool manual)
+    {
+        if (_quitting)
+        {
+            return;
+        }
+        if (manual)
+        {
+            _autoInstallBlocked = false;
+        }
+        if (!Service.IsSignedIn)
+        {
+            if (manual)
+            {
+                Logger.Info("update", "update check skipped, not signed in");
+            }
+            return;
+        }
+        _ = Updater.CheckAsync(manual);
+    }
+
+    private void OnUpdateChanged()
+    {
+        if (_quitting)
+        {
+            return;
+        }
+        try
+        {
+            _tray?.Update();
+            _settingsWindow?.OnUpdateChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("ui", "update refresh failed", ex);
+        }
+        if (Updater.Status.Stage == UpdateStage.Ready)
+        {
+            TryAutoInstall();
+        }
+    }
+
+    private bool IsIdle()
+    {
+        if (_history != null && _history.IsShown)
+        {
+            return false;
+        }
+        if (_settingsWindow != null || _logsWindow != null)
+        {
+            return false;
+        }
+        return !Service.IsSyncing;
+    }
+
+    private void TryAutoInstall()
+    {
+        if (_quitting || _autoInstallBlocked || !Settings.Current.AutoInstallUpdates)
+        {
+            return;
+        }
+        if (Updater.Status.Stage != UpdateStage.Ready || !IsIdle())
+        {
+            return;
+        }
+        Logger.Info("update", "installing the update automatically while idle");
+        if (!InstallUpdate(false))
+        {
+            _autoInstallBlocked = true;
+        }
+    }
+
+    internal bool InstallUpdate(bool userInitiated)
+    {
+        var exe = Environment.ProcessPath;
+        if (string.IsNullOrEmpty(exe))
+        {
+            Notifier.Problem("Update could not be installed", "The app location is unknown.");
+            return false;
+        }
+        if (!Updater.StartInstall(Environment.ProcessId, exe, out var error))
+        {
+            Notifier.Problem("Update could not be installed", error ?? "Unknown error.");
+            return false;
+        }
+        Logger.Info("update", userInitiated ? "restarting to update" : "restarting to update automatically");
+        Quit();
+        return true;
     }
 
     private void SyncStartupRegistration()
@@ -165,7 +377,7 @@ public sealed class AppHost
     private void OnSecondInstance()
     {
         Logger.Info("app", "activated by another launch");
-        if (!Service.IsSignedIn || !Service.HasKey)
+        if (!Service.IsSignedIn || !Service.HasKey || Settings.Current.IsReachableOnlyByRelaunch)
         {
             ShowSettings();
         }
@@ -219,6 +431,10 @@ public sealed class AppHost
             _tray?.Update();
             _history?.OnServiceChanged();
             _settingsWindow?.OnServiceChanged();
+            if (Settings.Current.ShowInTaskbar && _history == null)
+            {
+                EnsureTaskbarEntry();
+            }
         }
         catch (Exception ex)
         {
@@ -256,7 +472,7 @@ public sealed class AppHost
         }
     }
 
-    internal void ShowSettings()
+    internal void ShowSettings(string? page = null)
     {
         try
         {
@@ -265,7 +481,7 @@ public sealed class AppHost
                 _settingsWindow = new SettingsWindow(this);
                 _settingsWindow.Closed += (_, _) => _settingsWindow = null;
             }
-            _settingsWindow.ShowWindow();
+            _settingsWindow.ShowWindow(page);
         }
         catch (Exception ex)
         {
@@ -372,6 +588,8 @@ public sealed class AppHost
         {
             _activateWait?.Unregister(null);
             _maintenance?.Stop();
+            _updateTimer?.Stop();
+            _installTimer?.Stop();
             _history?.CloseForExit();
             _settingsWindow?.Close();
             _logsWindow?.Close();

@@ -1,6 +1,7 @@
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Windows.System;
@@ -8,6 +9,7 @@ using YikzClipboard.App.Platform;
 using YikzClipboard.Core.Protocol;
 using YikzClipboard.Core.Storage;
 using YikzClipboard.Core.Sync;
+using YikzClipboard.Core.Updates;
 
 namespace YikzClipboard.App.UI;
 
@@ -21,6 +23,14 @@ internal sealed class SettingsWindow : Window
     private string _page = "account";
     private ServiceStatus? _lastStatus;
     private bool _busy;
+    private TextBlock? _updateStatus;
+    private ProgressBar? _updateProgress;
+    private Button? _updateCheck;
+    private Button? _updateRestart;
+    private TextBlock? _updateLastChecked;
+    private TextBlock? _notesTitle;
+    private RichTextBlock? _notes;
+    private string? _notesVersion;
 
     public SettingsWindow(AppHost host)
     {
@@ -41,6 +51,7 @@ internal sealed class SettingsWindow : Window
         AddNavItem("sync", "Sync", Glyphs.Sync);
         AddNavItem("general", "General", Glyphs.Settings);
         AddNavItem("devices", "Devices and Storage", Glyphs.Devices);
+        AddNavItem("updates", "Updates", Glyphs.Update);
         AddNavItem("about", "About", Glyphs.Info);
         _nav.SelectionChanged += (_, args) =>
         {
@@ -68,11 +79,23 @@ internal sealed class SettingsWindow : Window
         _nav.MenuItems.Add(item);
     }
 
-    public void ShowWindow()
+    public void ShowWindow(string? page = null)
     {
         _lastStatus = null;
+        if (page != null && _items.TryGetValue(page, out var item) && _page != page)
+        {
+            _nav.SelectedItem = item;
+        }
         OnServiceChanged();
         WindowHelpers.BringToFront(this);
+    }
+
+    public void OnUpdateChanged()
+    {
+        if (_page == "updates")
+        {
+            RefreshUpdateWidgets();
+        }
     }
 
     public void OnServiceChanged()
@@ -89,6 +112,10 @@ internal sealed class SettingsWindow : Window
             {
                 Render();
             }
+            else if (_page == "updates")
+            {
+                RefreshUpdateWidgets();
+            }
         }
     }
 
@@ -99,9 +126,14 @@ internal sealed class SettingsWindow : Window
             "sync" => SyncPage(),
             "general" => GeneralPage(),
             "devices" => DevicesPage(),
+            "updates" => UpdatesPage(),
             "about" => AboutPage(),
             _ => AccountPage(),
         };
+        if (_page != "updates")
+        {
+            ClearUpdateWidgets();
+        }
         _nav.Content = new ScrollViewer
         {
             Content = new Border { Child = page, Padding = new Thickness(36, 24, 36, 36), MaxWidth = 860, HorizontalAlignment = HorizontalAlignment.Stretch },
@@ -507,6 +539,47 @@ internal sealed class SettingsWindow : Window
         hotkeyBox.TextSubmitted += (_, e) => Apply(e.Text);
         page.Children.Add(Ui.SettingCard(Glyphs.Keyboard, "History shortcut", "Opens the clipboard history from anywhere. Type a combination such as Ctrl+Alt+V.", hotkeyBox));
         page.Children.Add(hotkeyError);
+        page.Children.Add(Ui.SectionHeader("Visibility"));
+        var trayToggle = new ToggleSwitch { IsOn = s.ShowTrayIcon, OnContent = "On", OffContent = "Off" };
+        var taskbarToggle = new ToggleSwitch { IsOn = s.ShowInTaskbar, OnContent = "On", OffContent = "Off" };
+        var reverting = false;
+        async void VisibilityChanged(ToggleSwitch toggle, bool isTray)
+        {
+            if (reverting)
+            {
+                return;
+            }
+            if (!trayToggle.IsOn && !taskbarToggle.IsOn)
+            {
+                var hotkey = _host.ActiveHotkey;
+                var how = string.IsNullOrEmpty(hotkey)
+                    ? "by launching YikzClipboard.exe again, which opens Settings"
+                    : "with " + hotkey + " or by launching YikzClipboard.exe again, which opens Settings";
+                var confirmed = await ConfirmAsync(
+                    "Hide the tray icon and taskbar button?",
+                    "Yikz Clipboard keeps running and syncing in the background. You can still reach it " + how + ".",
+                    "Hide both");
+                if (!confirmed)
+                {
+                    reverting = true;
+                    toggle.IsOn = true;
+                    reverting = false;
+                    return;
+                }
+            }
+            if (isTray)
+            {
+                _host.SetShowTrayIcon(toggle.IsOn);
+            }
+            else
+            {
+                _host.SetShowInTaskbar(toggle.IsOn);
+            }
+        }
+        trayToggle.Toggled += (_, _) => VisibilityChanged(trayToggle, true);
+        taskbarToggle.Toggled += (_, _) => VisibilityChanged(taskbarToggle, false);
+        page.Children.Add(Ui.SettingCard(Glyphs.Tray, "Show tray icon", "Status, recent items and quick actions in the notification area", trayToggle));
+        page.Children.Add(Ui.SettingCard(Glyphs.Taskbar, "Show in taskbar", "Keeps a History button in the taskbar. Clicking it opens History.", taskbarToggle));
         var level = new ComboBox { MinWidth = 140 };
         level.Items.Add("Info");
         level.Items.Add("Debug");
@@ -522,6 +595,185 @@ internal sealed class SettingsWindow : Window
         logs.Click += (_, _) => _host.ShowLogs();
         page.Children.Add(Ui.SettingCard(Glyphs.Logs, "Logs", "Connection, sync and clipboard events", logs));
         return page;
+    }
+
+    private StackPanel UpdatesPage()
+    {
+        var page = PageRoot("Updates");
+        var head = new Grid { ColumnSpacing = 16 };
+        head.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        head.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        var texts = new StackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+        texts.Children.Add(Ui.Text("Yikz Clipboard " + AppHost.AppVersion, 18, true));
+        _updateStatus = Ui.Secondary("", 13, true);
+        texts.Children.Add(_updateStatus);
+        _updateProgress = new ProgressBar { Minimum = 0, Maximum = 100, Height = 4, Margin = new Thickness(0, 6, 0, 0), Visibility = Visibility.Collapsed };
+        texts.Children.Add(_updateProgress);
+        head.Children.Add(texts);
+        var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, VerticalAlignment = VerticalAlignment.Center };
+        _updateRestart = new Button { Visibility = Visibility.Collapsed };
+        Ui.Styled(_updateRestart, "AccentButtonStyle");
+        _updateRestart.Click += (_, _) => _host.InstallUpdate(true);
+        _updateCheck = new Button { Content = Ui.IconLabel(Glyphs.Refresh, "Check for updates") };
+        _updateCheck.Click += (_, _) =>
+        {
+            _host.CheckForUpdates(true);
+            RefreshUpdateWidgets();
+        };
+        buttons.Children.Add(_updateRestart);
+        buttons.Children.Add(_updateCheck);
+        Grid.SetColumn(buttons, 1);
+        head.Children.Add(buttons);
+        page.Children.Add(Ui.Card(head, new Thickness(20)));
+        page.Children.Add(Toggle(Glyphs.Download, "Automatically install updates", "Updates are verified, then installed while Yikz Clipboard is idle. The app restarts in the background.", _service.Settings.AutoInstallUpdates, v => _service.SettingsStore.Update(x => x.AutoInstallUpdates = v)));
+        _updateLastChecked = Ui.Secondary("", 12);
+        page.Children.Add(Ui.SettingCard(Glyphs.History, "Last checked", "Checks run at startup, every 6 hours and when the server announces a release", _updateLastChecked));
+        page.Children.Add(Ui.SectionHeader("What's new"));
+        var notesPanel = new StackPanel { Spacing = 8 };
+        _notesTitle = Ui.Text("", 14, true);
+        _notes = new RichTextBlock { IsTextSelectionEnabled = true, TextWrapping = TextWrapping.Wrap };
+        notesPanel.Children.Add(_notesTitle);
+        notesPanel.Children.Add(_notes);
+        _notesVersion = null;
+        page.Children.Add(Ui.Card(notesPanel, new Thickness(20)));
+        RefreshUpdateWidgets();
+        return page;
+    }
+
+    private void ClearUpdateWidgets()
+    {
+        _updateStatus = null;
+        _updateProgress = null;
+        _updateCheck = null;
+        _updateRestart = null;
+        _updateLastChecked = null;
+        _notesTitle = null;
+        _notes = null;
+        _notesVersion = null;
+    }
+
+    private void RefreshUpdateWidgets()
+    {
+        if (_updateStatus == null || _updateProgress == null || _updateCheck == null || _updateRestart == null || _updateLastChecked == null)
+        {
+            return;
+        }
+        var status = _host.Updater.Status;
+        var busy = status.Stage is UpdateStage.Checking or UpdateStage.Downloading or UpdateStage.Verifying or UpdateStage.Installing;
+        string text;
+        if (!string.IsNullOrEmpty(status.Message))
+        {
+            text = status.Message;
+        }
+        else if (!_service.IsSignedIn)
+        {
+            text = "Sign in to check for updates.";
+        }
+        else if (status.LastChecked == null)
+        {
+            text = "Updates have not been checked yet.";
+        }
+        else
+        {
+            text = "Yikz Clipboard checks for updates automatically.";
+        }
+        if (status.Stage == UpdateStage.Downloading)
+        {
+            text += " " + (int)Math.Round(status.Progress * 100) + "%";
+        }
+        _updateStatus.Text = text;
+        _updateProgress.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
+        _updateProgress.IsIndeterminate = status.Stage != UpdateStage.Downloading;
+        _updateProgress.Value = status.Progress * 100;
+        _updateCheck.IsEnabled = !busy && _service.IsSignedIn;
+        var ready = status.Stage == UpdateStage.Ready && status.Prepared != null;
+        _updateRestart.Visibility = ready ? Visibility.Visible : Visibility.Collapsed;
+        if (ready)
+        {
+            _updateRestart.Content = "Restart to update (" + status.Prepared!.Version + ")";
+        }
+        _updateLastChecked.Text = status.LastChecked is { } last ? last.ToLocalTime().ToString("g") : "Never";
+        var release = status.Prepared?.Release ?? status.Latest;
+        var key = release == null ? "" : release.Version + "\n" + release.NotesMd;
+        if (_notes != null && _notesTitle != null && key != _notesVersion)
+        {
+            _notesVersion = key;
+            if (release == null)
+            {
+                _notesTitle.Text = "";
+                _notesTitle.Visibility = Visibility.Collapsed;
+                RenderNotes(_notes, null, "Release notes appear here after the first update check.");
+            }
+            else
+            {
+                var published = release.PublishedTime is { } t ? " (" + t.ToLocalTime().ToString("d") + ")" : "";
+                _notesTitle.Text = "Version " + release.Version + published;
+                _notesTitle.Visibility = Visibility.Visible;
+                RenderNotes(_notes, release.NotesMd, "No release notes for this version.");
+            }
+        }
+    }
+
+    private static void RenderNotes(RichTextBlock box, string? markdown, string empty)
+    {
+        box.Blocks.Clear();
+        var blocks = NotesMarkdown.Parse(markdown);
+        if (blocks.Count == 0)
+        {
+            var p = new Paragraph();
+            p.Inlines.Add(new Run { Text = empty });
+            box.Blocks.Add(p);
+            return;
+        }
+        var first = true;
+        foreach (var block in blocks)
+        {
+            var p = new Paragraph();
+            switch (block.Kind)
+            {
+                case NotesBlockKind.Heading:
+                    p.FontSize = 15;
+                    p.FontWeight = FontWeights.SemiBold;
+                    p.Margin = new Thickness(0, first ? 0 : 12, 0, 4);
+                    break;
+                case NotesBlockKind.Bullet:
+                    p.Margin = new Thickness(18, 2, 0, 2);
+                    p.TextIndent = -12;
+                    p.Inlines.Add(new Run { Text = "\u2022  " });
+                    break;
+                default:
+                    p.Margin = new Thickness(0, 2, 0, 2);
+                    break;
+            }
+            foreach (var span in block.Spans)
+            {
+                switch (span.Kind)
+                {
+                    case NotesSpanKind.Bold:
+                        {
+                            var bold = new Bold();
+                            bold.Inlines.Add(new Run { Text = span.Text });
+                            p.Inlines.Add(bold);
+                            break;
+                        }
+                    case NotesSpanKind.Code:
+                        p.Inlines.Add(new Run { Text = span.Text, FontFamily = new FontFamily("Cascadia Mono, Consolas") });
+                        break;
+                    case NotesSpanKind.Link when span.Url != null && Uri.TryCreate(span.Url, UriKind.Absolute, out var uri):
+                        {
+                            var link = new Hyperlink { NavigateUri = uri };
+                            link.Inlines.Add(new Run { Text = span.Text });
+                            p.Inlines.Add(link);
+                            break;
+                        }
+                    default:
+                        p.Inlines.Add(new Run { Text = span.Text });
+                        break;
+                }
+            }
+            box.Blocks.Add(p);
+            first = false;
+        }
     }
 
     private StackPanel DevicesPage()

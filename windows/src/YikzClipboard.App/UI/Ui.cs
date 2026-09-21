@@ -60,6 +60,9 @@ internal static class Glyphs
     public const string Archive = "\uf012";
     public const string Code = "\ue943";
     public const string Pdf = "\uea90";
+    public const string Update = "\ue777";
+    public const string Taskbar = "\ue7c4";
+    public const string Tray = "\ue8b9";
 
     public static string ForKind(EntryKind kind) => kind switch
     {
