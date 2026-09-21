@@ -1,0 +1,52 @@
+name: apple
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apple/**"
+      - "protocol/**"
+      - ".github/workflows/apple.yml"
+  pull_request:
+    paths:
+      - "apple/**"
+      - "protocol/**"
+      - ".github/workflows/apple.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: apple-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 40
+    env:
+      YIKZ_NO_CLT_PLUGIN: "1"
+    defaults:
+      run:
+        working-directory: apple
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Toolchain
+        run: |
+          xcodebuild -version || true
+          swift --version
+
+      - name: Test ClipCore
+        run: swift test
+
+      - name: Bundle app
+        run: ./scripts/bundle.sh
+
+      - name: Upload app
+        uses: actions/upload-artifact@v4
+        with:
+          name: YikzClipboard-macOS
+          path: apple/build/YikzClipboard.zip
+          if-no-files-found: error
+          retention-days: 30
