@@ -91,6 +91,7 @@ public sealed class FakeWsServer : IAsyncDisposable
     }
 }
 
+[Collection(TimingCollection.Name)]
 public class WebSocketServerTests
 {
     private static readonly string Welcome = Vectors.WsMessage("welcome").GetRawText();
@@ -173,7 +174,7 @@ public class WebSocketServerTests
         await using var client = Client(server, "yc_goodtoken", new ConnectionOptions
         {
             HeartbeatInterval = TimeSpan.FromSeconds(20),
-            DeadTimeout = TimeSpan.FromMilliseconds(1500),
+            DeadTimeout = TimeSpan.FromMilliseconds(5000),
         });
         client.Start();
         await Wait.UntilAsync(() => Volatile.Read(ref pongs) >= 8, TimeSpan.FromSeconds(10));

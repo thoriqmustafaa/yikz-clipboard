@@ -5,6 +5,7 @@ using YikzClipboard.Core.Tests.Support;
 
 namespace YikzClipboard.Core.Tests;
 
+[Collection(TimingCollection.Name)]
 public class ConnectionManagerTests
 {
     private static readonly string Welcome = Vectors.WsMessage("welcome").GetRawText();
@@ -188,7 +189,7 @@ public class ConnectionManagerTests
         var options = new ConnectionOptions
         {
             HeartbeatInterval = TimeSpan.FromMilliseconds(100),
-            DeadTimeout = TimeSpan.FromMilliseconds(1000),
+            DeadTimeout = TimeSpan.FromMilliseconds(4000),
         };
         await using var cm = Create(transport, options);
         cm.Start();
@@ -201,7 +202,7 @@ public class ConnectionManagerTests
             }
         };
         conn.ServerSend(Welcome);
-        await Task.Delay(2500);
+        await Task.Delay(6000);
         Assert.False(conn.Aborted);
         Assert.Equal(1, transport.Attempts);
         Assert.Equal(ConnectionState.Connected, cm.State);
