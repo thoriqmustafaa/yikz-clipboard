@@ -1,0 +1,13 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="ARM64" />
+  </Configurations>
+  <Folder Name="/src/">
+    <Project Path="src/YikzClipboard.App/YikzClipboard.App.csproj" />
+    <Project Path="src/YikzClipboard.Core/YikzClipboard.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/YikzClipboard.Core.Tests/YikzClipboard.Core.Tests.csproj" />
+  </Folder>
+</Solution>

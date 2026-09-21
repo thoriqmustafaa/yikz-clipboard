@@ -1,0 +1,11 @@
+bin/
+obj/
+artifacts/
+publish/
+*.user
+*.suo
+.vs/
+*.binlog
+TestResults/
+AppPackages/
+BundleArtifacts/
