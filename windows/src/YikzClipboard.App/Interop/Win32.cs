@@ -55,6 +55,7 @@ internal static class Win32
     public const int SM_CXSMICON = 49;
     public const int SW_SHOWNORMAL = 1;
     public const int SW_RESTORE = 9;
+    public const int SW_SHOWMINNOACTIVE = 7;
 
     public static readonly Guid GUID_CONSOLE_DISPLAY_STATE = new("6FE69556-704A-47A0-8F24-C28D936FDA47");
 

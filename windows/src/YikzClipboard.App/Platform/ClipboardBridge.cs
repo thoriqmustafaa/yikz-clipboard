@@ -299,6 +299,11 @@ internal sealed class Notifier : IUserNotifier, IDisposable
         }
     }
 
+    public void Info(string title, string message)
+    {
+        Show(title, message, null, false);
+    }
+
     public void Problem(string title, string message)
     {
         lock (_recentProblems)

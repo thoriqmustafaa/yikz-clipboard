@@ -220,6 +220,7 @@ public static class WsTypes
     public const string Ping = "ping";
     public const string Pong = "pong";
     public const string Error = "error";
+    public const string ReleaseAvailable = "release_available";
 }
 
 public sealed class WsEnvelope
@@ -286,6 +287,12 @@ public sealed class ClipPinnedMessage
     [JsonPropertyName("id")] public string Id { get; set; } = "";
     [JsonPropertyName("pinned")] public bool Pinned { get; set; }
     [JsonPropertyName("state_rev")] public long StateRev { get; set; }
+}
+
+public sealed class ReleaseAvailableMessage
+{
+    [JsonPropertyName("type")] public string Type { get; set; } = WsTypes.ReleaseAvailable;
+    [JsonPropertyName("version")] public string Version { get; set; } = "";
 }
 
 public sealed class StorageWarningMessage

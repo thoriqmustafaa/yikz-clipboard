@@ -25,6 +25,13 @@ public sealed class AppSettings
     [JsonPropertyName("notify_received")] public bool NotifyReceived { get; set; }
     [JsonPropertyName("local_history_limit")] public int LocalHistoryLimit { get; set; } = 5000;
     [JsonPropertyName("log_level")] public string LogLevel { get; set; } = "info";
+    [JsonPropertyName("show_tray_icon")] public bool ShowTrayIcon { get; set; } = true;
+    [JsonPropertyName("show_in_taskbar")] public bool ShowInTaskbar { get; set; }
+    [JsonPropertyName("auto_install_updates")] public bool AutoInstallUpdates { get; set; } = true;
+    [JsonPropertyName("last_update_check")] public long? LastUpdateCheck { get; set; }
+
+    [JsonIgnore]
+    public bool IsReachableOnlyByRelaunch => !ShowTrayIcon && !ShowInTaskbar;
 
     public AppSettings Clone()
     {

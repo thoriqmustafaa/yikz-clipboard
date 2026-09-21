@@ -127,6 +127,7 @@ public sealed class SyncEngine
     public event Action<string>? KeyInvalid;
     public event Action<HistoryEntry, ReceivedContent>? Applied;
     public event Action<bool>? SyncingChanged;
+    public event Action<string>? ReleaseAvailable;
 
     public void ResetState()
     {
@@ -211,6 +212,15 @@ public sealed class SyncEngine
                         if (msg != null)
                         {
                             StorageWarning?.Invoke(msg);
+                        }
+                        break;
+                    }
+                case WsTypes.ReleaseAvailable:
+                    {
+                        var msg = JsonSerializer.Deserialize(json, ProtocolJsonContext.Default.ReleaseAvailableMessage);
+                        if (msg != null)
+                        {
+                            ReleaseAvailable?.Invoke(msg.Version);
                         }
                         break;
                     }

@@ -51,6 +51,7 @@ internal sealed class HistoryWindow : Window
     private bool _exiting;
     private bool _positioned;
     private bool _focusPending;
+    private bool _taskbarMode;
 
     public HistoryWindow(AppHost host)
     {
@@ -70,6 +71,7 @@ internal sealed class HistoryWindow : Window
             presenter.SetBorderAndTitleBar(true, false);
         }
         AppWindow.IsShownInSwitchers = false;
+        SetTaskbarMode(host.Settings.Current.ShowInTaskbar);
         AppWindow.Closing += (_, e) =>
         {
             if (!_exiting)
@@ -89,7 +91,47 @@ internal sealed class HistoryWindow : Window
 
     public IntPtr Handle => WindowHelpers.Hwnd(this);
 
-    public bool IsShown => AppWindow.IsVisible;
+    public bool IsShown => AppWindow.IsVisible && !IsMinimized;
+
+    public bool IsMinimized => AppWindow.Presenter is OverlappedPresenter { State: OverlappedPresenterState.Minimized };
+
+    public bool TaskbarMode => _taskbarMode;
+
+    public void SetTaskbarMode(bool enabled)
+    {
+        _taskbarMode = enabled;
+        try
+        {
+            AppWindow.IsShownInSwitchers = enabled;
+            if (AppWindow.Presenter is OverlappedPresenter presenter)
+            {
+                presenter.IsMinimizable = enabled;
+            }
+            if (!enabled && AppWindow.IsVisible && IsMinimized)
+            {
+                AppWindow.Hide();
+            }
+        }
+        catch (Exception ex)
+        {
+            App.Log?.Warn("history", "could not change the taskbar mode", ex);
+        }
+    }
+
+    public void ShowInTaskbarMinimized()
+    {
+        if (!_taskbarMode || AppWindow.IsVisible)
+        {
+            return;
+        }
+        if (!_positioned)
+        {
+            WindowHelpers.CenterOnCursorMonitor(this, 880, 560, 0.35);
+            _positioned = true;
+        }
+        _dirty = true;
+        Win32.ShowWindow(Handle, Win32.SW_SHOWMINNOACTIVE);
+    }
 
     public bool IsForeground => Win32.GetForegroundWindow() == Handle;
 
@@ -249,6 +291,14 @@ internal sealed class HistoryWindow : Window
     public void HideWindow()
     {
         _previewCts?.Cancel();
+        if (_taskbarMode && !_exiting && AppWindow.Presenter is OverlappedPresenter presenter)
+        {
+            if (!IsMinimized)
+            {
+                presenter.Minimize();
+            }
+            return;
+        }
         AppWindow.Hide();
     }
 
@@ -279,6 +329,15 @@ internal sealed class HistoryWindow : Window
             _focusPending = false;
             _search.Focus(FocusState.Programmatic);
             _search.SelectAll();
+        }
+        else if (_taskbarMode && !_modal)
+        {
+            _previous = IntPtr.Zero;
+            if (_dirty)
+            {
+                Reload();
+                UpdateStatus();
+            }
         }
     }
 
