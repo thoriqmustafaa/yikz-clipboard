@@ -49,7 +49,7 @@ export interface RequestOptions {
   auth?: boolean;
   signal?: AbortSignal;
   retries?: number;
-  expect?: 'json' | 'bytes' | 'none';
+  expect?: 'json' | 'bytes' | 'blob' | 'none';
 }
 
 export function retryDelayMs(attempt: number): number {
@@ -130,6 +130,7 @@ export async function request<T = unknown>(method: string, path: string, opts: R
       const expect = opts.expect ?? (res.status === 204 ? 'none' : 'json');
       if (expect === 'none' || res.status === 204) return undefined as T;
       if (expect === 'bytes') return new Uint8Array(await res.arrayBuffer()) as T;
+      if (expect === 'blob') return (await res.blob()) as T;
       try {
         return (await res.json()) as T;
       } catch {

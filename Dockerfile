@@ -5,6 +5,7 @@ COPY web/package.json web/pnpm-lock.yaml ./
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile
 COPY web/ ./
+COPY VERSION /src/VERSION
 RUN pnpm build
 
 FROM --platform=$BUILDPLATFORM golang:1.27-alpine AS build

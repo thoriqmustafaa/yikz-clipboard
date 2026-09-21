@@ -4,11 +4,13 @@ on:
   push:
     paths:
       - 'web/**'
+      - 'VERSION'
       - 'protocol/**'
       - '.github/workflows/web.yml'
   pull_request:
     paths:
       - 'web/**'
+      - 'VERSION'
       - 'protocol/**'
       - '.github/workflows/web.yml'
 

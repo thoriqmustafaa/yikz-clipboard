@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/ed25519"
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
@@ -359,6 +360,9 @@ type harnessOpts struct {
 	Hub           hub.Config
 	UploadTTL     time.Duration
 	Start         time.Time
+	ReleaseToken  string
+	ReleaseKey    ed25519.PublicKey
+	ReleasesKeep  int
 }
 
 type harness struct {
@@ -399,6 +403,8 @@ func newHarness(t testing.TB, o harnessOpts) *harness {
 		MinFreeDiskBytes: o.MinFree,
 		TrustedProxies:   proxies,
 		ShutdownTimeout:  5 * time.Second,
+		ReleaseToken:     o.ReleaseToken,
+		ReleasesKeep:     o.ReleasesKeep,
 	}
 	h := &harness{t: t, clock: clock.NewFake(o.Start), rand: &scriptRand{}}
 	h.free.Store(11 * gib)
@@ -415,6 +421,8 @@ func newHarness(t testing.TB, o harnessOpts) *harness {
 		DiskFree:  func(string) (int64, error) { return h.free.Load(), nil },
 		Hub:       o.Hub,
 		UploadTTL: o.UploadTTL,
+
+		releasePublicKey: o.ReleaseKey,
 	})
 	if err != nil {
 		t.Fatal(err)

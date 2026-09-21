@@ -19,6 +19,8 @@ import {
   type WelcomeMessage
 } from './protocol/messages';
 import { session } from './session.svelte';
+import { toasts } from './toast.svelte';
+import { ui } from './ui.svelte';
 import { APP_VERSION } from './version';
 
 export type ConnStatus = 'idle' | 'connecting' | 'connected' | 'waiting' | 'offline' | 'paused' | 'update' | 'stopped';
@@ -566,6 +568,14 @@ class Sync {
       case 'storage_warning':
         this.storageWarning = msg.active ? msg : null;
         activity.add(msg.active ? 'warn' : 'info', 'sync', msg.active ? 'Server disk is low' : 'Server disk space recovered');
+        return;
+      case 'release_available':
+        activity.info('sync', `Version ${msg.version} is available`);
+        ui.releaseAvailable(msg.version);
+        toasts.show('info', `Version ${msg.version} is available`, {
+          action: { label: "What's new", run: () => ui.openPanel('whatsnew') },
+          duration: 12000
+        });
         return;
       case 'error':
         activity.warn('connection', `Server error ${msg.code}: ${msg.message}`);

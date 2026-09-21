@@ -29,6 +29,8 @@ type Config struct {
 	TrustedProxies   []netip.Prefix
 	LogLevel         slog.Level
 	ShutdownTimeout  time.Duration
+	ReleaseToken     string
+	ReleasesKeep     int
 }
 
 func Load() (Config, error) {
@@ -92,6 +94,13 @@ func FromLookup(lookup func(string) (string, bool)) (Config, error) {
 	if err != nil {
 		errs = append(errs, fmt.Errorf("CC_TRUSTED_PROXIES: %v", err))
 	}
+
+	cfg.ReleaseToken = get("CC_RELEASE_TOKEN", "")
+	keep, err := strconv.Atoi(get("CC_RELEASES_KEEP", "5"))
+	if err != nil || keep < 1 || keep > 1000 {
+		errs = append(errs, errors.New("CC_RELEASES_KEEP must be an integer between 1 and 1000"))
+	}
+	cfg.ReleasesKeep = keep
 
 	switch strings.ToLower(get("CC_LOG_LEVEL", "info")) {
 	case "debug":

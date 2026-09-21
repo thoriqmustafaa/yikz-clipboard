@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"crypto/ed25519"
 	"errors"
 	"fmt"
 	"io"
@@ -19,6 +20,7 @@ import (
 	"github.com/thoriqmustafaa/yikz-clipboard/server/internal/disk"
 	"github.com/thoriqmustafaa/yikz-clipboard/server/internal/hub"
 	"github.com/thoriqmustafaa/yikz-clipboard/server/internal/ratelimit"
+	"github.com/thoriqmustafaa/yikz-clipboard/server/internal/release"
 	"github.com/thoriqmustafaa/yikz-clipboard/server/internal/retention"
 	"github.com/thoriqmustafaa/yikz-clipboard/server/internal/service"
 	"github.com/thoriqmustafaa/yikz-clipboard/server/internal/store"
@@ -37,16 +39,19 @@ type Options struct {
 	DiskCheckInterval time.Duration
 	UploadTTL         time.Duration
 	WebUI             http.Handler
+
+	releasePublicKey ed25519.PublicKey
 }
 
 type App struct {
-	Config  config.Config
-	Store   *store.Store
-	Blobs   *blob.Store
-	Disk    *disk.Guard
-	Hub     *hub.Hub
-	Service *service.Service
-	Handler http.Handler
+	Config   config.Config
+	Store    *store.Store
+	Blobs    *blob.Store
+	Disk     *disk.Guard
+	Hub      *hub.Hub
+	Service  *service.Service
+	Releases *release.Store
+	Handler  http.Handler
 
 	log               *slog.Logger
 	retentionInterval time.Duration
@@ -129,6 +134,18 @@ func New(ctx context.Context, o Options) (*App, error) {
 	}
 	guard.Refresh()
 
+	releases, err := release.Open(release.Options{
+		DataDir:   cfg.DataDir,
+		Keep:      cfg.ReleasesKeep,
+		PublicKey: o.releasePublicKey,
+		DiskLow:   func() bool { return guard.Status().Low },
+		Now:       o.Clock.Now,
+	})
+	if err != nil {
+		st.Close()
+		return nil, err
+	}
+
 	ui := o.WebUI
 	if ui == nil {
 		w, err := webui.New()
@@ -145,6 +162,8 @@ func New(ctx context.Context, o Options) (*App, error) {
 		TrustedProxies: cfg.TrustedProxies,
 		Logger:         o.Logger,
 		ServerVersion:  o.Version,
+		Releases:       releases,
+		ReleaseToken:   cfg.ReleaseToken,
 	})
 	return &App{
 		Config:            cfg,
@@ -153,6 +172,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		Disk:              guard,
 		Hub:               h,
 		Service:           svc,
+		Releases:          releases,
 		Handler:           handler,
 		log:               o.Logger,
 		retentionInterval: o.RetentionInterval,

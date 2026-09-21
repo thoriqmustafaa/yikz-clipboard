@@ -1,0 +1,385 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  RELEASE_SERVER: https://clip.yikz.dev
+  RELEASE_PUBLIC_KEY: 2Ve8Uwt53+AwbuAiK08Xf2gB5EU7pguqXL7I9yeqGGk=
+
+jobs:
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      build_number: ${{ steps.version.outputs.build_number }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check tag matches VERSION
+        id: version
+        run: |
+          version="$(tr -d '[:space:]' < VERSION)"
+          if ! printf '%s' "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "VERSION '$version' is not MAJOR.MINOR.PATCH" >&2
+            exit 1
+          fi
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "tag $GITHUB_REF_NAME does not match v$version from VERSION" >&2
+            exit 1
+          fi
+          IFS=. read -r major minor patch <<< "$version"
+          build_number=$((major * 10000 + minor * 100 + patch))
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "build_number=$build_number" >> "$GITHUB_OUTPUT"
+          echo "Releasing $version (build $build_number)"
+
+      - name: Extract release notes
+        run: |
+          mkdir -p notes
+          bash scripts/extract-notes.sh "${{ steps.version.outputs.version }}" CHANGELOG.md > notes/notes.md
+          cat notes/notes.md
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: notes/notes.md
+          if-no-files-found: error
+          retention-days: 7
+
+  macos:
+    name: macOS
+    needs: prepare
+    runs-on: macos-latest
+    timeout-minutes: 40
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+      YIKZ_NO_CLT_PLUGIN: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Import signing identity
+        env:
+          MACOS_CERT_P12_B64: ${{ secrets.MACOS_CERT_P12_B64 }}
+          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+        run: |
+          keychain="$RUNNER_TEMP/yikz-signing.keychain-db"
+          keychain_password="$(openssl rand -hex 24)"
+          printf '%s' "$MACOS_CERT_P12_B64" | base64 --decode > "$RUNNER_TEMP/signing.p12"
+          security create-keychain -p "$keychain_password" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          security import "$RUNNER_TEMP/signing.p12" -k "$keychain" -P "$MACOS_CERT_PASSWORD" -f pkcs12 -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain" > /dev/null
+          existing="$(security list-keychains -d user | sed -e 's/^[[:space:]]*"//' -e 's/"[[:space:]]*$//')"
+          security list-keychains -d user -s "$keychain" $existing
+          rm -f "$RUNNER_TEMP/signing.p12"
+          security find-identity -p codesigning "$keychain"
+          echo "SIGNING_KEYCHAIN=$keychain" >> "$GITHUB_ENV"
+
+      - name: Bundle app
+        working-directory: apple
+        env:
+          CODESIGN_IDENTITY: Yikz Clipboard Signing
+          BUILD_NUMBER: ${{ needs.prepare.outputs.build_number }}
+        run: ./scripts/bundle.sh
+
+      - name: Verify signature
+        run: |
+          codesign --verify --deep --strict --verbose=2 apple/build/YikzClipboard.app
+          codesign -dvv apple/build/YikzClipboard.app 2>&1 | grep -E 'Authority|Identifier|TeamIdentifier' || true
+          bundle_version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' apple/build/YikzClipboard.app/Contents/Info.plist)"
+          if [ "$bundle_version" != "$VERSION" ]; then
+            echo "bundle version $bundle_version does not match $VERSION" >&2
+            exit 1
+          fi
+
+      - name: Zip
+        run: |
+          mkdir -p out
+          ditto -c -k --keepParent apple/build/YikzClipboard.app "out/YikzClipboard-$VERSION-macos.zip"
+          ls -l out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-macos
+          path: out/YikzClipboard-${{ needs.prepare.outputs.version }}-macos.zip
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Remove signing keychain
+        if: always()
+        run: |
+          if [ -n "${SIGNING_KEYCHAIN:-}" ]; then
+            security delete-keychain "$SIGNING_KEYCHAIN" || true
+          fi
+
+  android:
+    name: Android
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Install Android SDK packages
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36.1" "build-tools;36.1.0" "platform-tools" > /dev/null
+
+      - name: Decode keystore
+        env:
+          ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          printf '%s' "$ANDROID_KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/release.keystore"
+          echo "YIKZ_KEYSTORE_FILE=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
+
+      - name: Build release APK
+        working-directory: android
+        env:
+          YIKZ_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          YIKZ_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          YIKZ_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew --no-daemon assembleRelease
+
+      - name: Verify and rename APK
+        run: |
+          apk=android/app/build/outputs/apk/release/app-release.apk
+          test -f "$apk"
+          "$ANDROID_HOME/build-tools/36.1.0/apksigner" verify --print-certs "$apk"
+          mkdir -p out
+          cp "$apk" "out/yikz-clipboard-$VERSION.apk"
+          ls -l out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-android
+          path: out/yikz-clipboard-${{ needs.prepare.outputs.version }}.apk
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Remove keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.keystore"
+
+  windows:
+    name: Windows (${{ matrix.rid }})
+    needs: prepare
+    runs-on: windows-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - rid: win-x64
+            platform: x64
+          - rid: win-arm64
+            platform: ARM64
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+      DOTNET_NOLOGO: "1"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
+      NUGET_XMLDOC_MODE: skip
+    defaults:
+      run:
+        working-directory: windows
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore src/YikzClipboard.App/YikzClipboard.App.csproj -r ${{ matrix.rid }} -p:Platform=${{ matrix.platform }}
+
+      - name: Publish
+        run: >
+          dotnet publish src/YikzClipboard.App/YikzClipboard.App.csproj
+          -c Release
+          -r ${{ matrix.rid }}
+          -p:Platform=${{ matrix.platform }}
+          -p:WindowsPackageType=None
+          -p:WindowsAppSDKSelfContained=true
+          --self-contained true
+          --no-restore
+          -o ../artifacts/publish/${{ matrix.rid }}
+
+      - name: Check output
+        shell: pwsh
+        run: |
+          $exe = Join-Path "../artifacts/publish/${{ matrix.rid }}" "YikzClipboard.exe"
+          if (-not (Test-Path $exe)) { throw "YikzClipboard.exe was not produced" }
+          $pri = Get-ChildItem "../artifacts/publish/${{ matrix.rid }}" -Filter *.pri
+          if ($pri.Count -eq 0) { throw "no .pri resources were produced" }
+          Get-ChildItem "../artifacts/publish/${{ matrix.rid }}" | Measure-Object -Property Length -Sum | ForEach-Object { "Publish size: {0:N1} MB" -f ($_.Sum / 1MB) }
+
+      - name: Zip
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force ../artifacts/zip | Out-Null
+          $zip = "../artifacts/zip/YikzClipboard-$env:VERSION-${{ matrix.rid }}.zip"
+          Compress-Archive -Path "../artifacts/publish/${{ matrix.rid }}/*" -DestinationPath $zip -Force
+          Get-Item $zip | Select-Object Name, Length
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.rid }}
+          path: artifacts/zip/YikzClipboard-${{ needs.prepare.outputs.version }}-${{ matrix.rid }}.zip
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Sign and publish
+    needs: [prepare, macos, android, windows]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+
+      - name: Check artifacts
+        run: |
+          mv dist/notes.md notes.md
+          for f in \
+            "YikzClipboard-$VERSION-macos.zip" \
+            "yikz-clipboard-$VERSION.apk" \
+            "YikzClipboard-$VERSION-win-x64.zip" \
+            "YikzClipboard-$VERSION-win-arm64.zip"; do
+            if [ ! -s "dist/$f" ]; then
+              echo "missing artifact $f" >&2
+              exit 1
+            fi
+          done
+          ls -l dist
+
+      - name: Load signing key
+        env:
+          RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
+        run: |
+          umask 077
+          printf '%s\n' "$RELEASE_SIGNING_KEY" > "$RUNNER_TEMP/release-signing.pem"
+          openssl pkey -in "$RUNNER_TEMP/release-signing.pem" -pubout -out "$RUNNER_TEMP/release-public.pem"
+          derived="$(openssl pkey -in "$RUNNER_TEMP/release-signing.pem" -pubout -outform DER | tail -c 32 | base64)"
+          if [ "$derived" != "$RELEASE_PUBLIC_KEY" ]; then
+            echo "RELEASE_SIGNING_KEY does not match the embedded release public key" >&2
+            exit 1
+          fi
+
+      - name: Hash, sign and build manifest
+        run: |
+          set -euo pipefail
+          key="$RUNNER_TEMP/release-signing.pem"
+          pub="$RUNNER_TEMP/release-public.pem"
+          work="$RUNNER_TEMP/sign"
+          mkdir -p "$work"
+          assets='[]'
+          while read -r platform file; do
+            path="dist/$file"
+            size="$(stat -c %s "$path")"
+            sha="$(sha256sum "$path" | cut -d' ' -f1)"
+            openssl dgst -sha256 -binary "$path" > "$work/$file.digest"
+            if [ "$(od -An -tx1 -v "$work/$file.digest" | tr -d ' \n')" != "$sha" ]; then
+              echo "digest mismatch for $file" >&2
+              exit 1
+            fi
+            openssl pkeyutl -sign -rawin -inkey "$key" -in "$work/$file.digest" -out "$work/$file.sig"
+            openssl pkeyutl -verify -rawin -pubin -inkey "$pub" -in "$work/$file.digest" -sigfile "$work/$file.sig"
+            sig="$(base64 -w0 "$work/$file.sig")"
+            assets="$(jq -c \
+              --arg platform "$platform" --arg file "$file" --argjson size "$size" --arg sha "$sha" --arg sig "$sig" \
+              '. + [{platform: $platform, file: $file, size: $size, sha256: $sha, signature: $sig}]' <<< "$assets")"
+            echo "$platform $file $size $sha"
+          done <<EOF
+          macos YikzClipboard-$VERSION-macos.zip
+          android yikz-clipboard-$VERSION.apk
+          windows-x64 YikzClipboard-$VERSION-win-x64.zip
+          windows-arm64 YikzClipboard-$VERSION-win-arm64.zip
+          EOF
+          jq -n \
+            --arg version "$VERSION" \
+            --arg published_at "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)" \
+            --rawfile notes notes.md \
+            --argjson assets "$assets" \
+            '{version: $version, published_at: $published_at, notes_md: $notes, assets: $assets}' > manifest.json
+          jq . manifest.json
+          rm -f "$key"
+
+      - name: Upload assets
+        env:
+          RELEASE_UPLOAD_TOKEN: ${{ secrets.RELEASE_UPLOAD_TOKEN }}
+        run: |
+          set -euo pipefail
+          for file in $(jq -r '.assets[].file' manifest.json); do
+            echo "Uploading $file"
+            curl --fail-with-body --silent --show-error \
+              --retry 5 --retry-all-errors --retry-delay 10 \
+              --connect-timeout 20 --max-time 1800 \
+              -X PUT \
+              -H "Authorization: Bearer $RELEASE_UPLOAD_TOKEN" \
+              -H "Content-Type: application/octet-stream" \
+              --upload-file "dist/$file" \
+              "$RELEASE_SERVER/api/admin/releases/$VERSION/assets/$file"
+          done
+
+      - name: Publish manifest
+        env:
+          RELEASE_UPLOAD_TOKEN: ${{ secrets.RELEASE_UPLOAD_TOKEN }}
+        run: |
+          set -euo pipefail
+          curl --fail-with-body --silent --show-error \
+            --retry 5 --retry-all-errors --retry-delay 10 \
+            --connect-timeout 20 --max-time 600 \
+            -X PUT \
+            -H "Authorization: Bearer $RELEASE_UPLOAD_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data-binary @manifest.json \
+            "$RELEASE_SERVER/api/admin/releases/$VERSION"
+          echo
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "Yikz Clipboard $VERSION" \
+            --notes-file notes.md \
+            --verify-tag \
+            "dist/YikzClipboard-$VERSION-macos.zip" \
+            "dist/yikz-clipboard-$VERSION.apk" \
+            "dist/YikzClipboard-$VERSION-win-x64.zip" \
+            "dist/YikzClipboard-$VERSION-win-arm64.zip" \
+            manifest.json
+
+      - name: Remove key material
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release-signing.pem" "$RUNNER_TEMP/release-public.pem"

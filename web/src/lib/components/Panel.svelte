@@ -1,5 +1,5 @@
 <script lang="ts" module>
-  export type PanelTab = 'devices' | 'storage' | 'activity' | 'settings';
+  export type { PanelTab } from '../ui.svelte';
 </script>
 
 <script lang="ts">
@@ -9,6 +9,9 @@
   import Icon, { type IconName } from './Icon.svelte';
   import SettingsTab from './SettingsTab.svelte';
   import StorageTab from './StorageTab.svelte';
+  import WhatsNewTab from './WhatsNewTab.svelte';
+  import type { PanelTab } from '../ui.svelte';
+  import { APP_VERSION } from '../version';
 
   let { tab = $bindable<PanelTab | null>(null) }: { tab?: PanelTab | null } = $props();
 
@@ -16,7 +19,8 @@
     { id: 'devices', label: 'Devices', icon: 'devices' },
     { id: 'storage', label: 'Storage', icon: 'storage' },
     { id: 'activity', label: 'Activity', icon: 'activity' },
-    { id: 'settings', label: 'Settings', icon: 'settings' }
+    { id: 'settings', label: 'Settings', icon: 'settings' },
+    { id: 'whatsnew', label: "What's new", icon: 'sparkles' }
   ];
 
   let open = $state(false);
@@ -31,6 +35,7 @@
 
   $effect(() => {
     if (!open) tab = null;
+    else tab = current;
   });
 
   function onTabKey(e: KeyboardEvent) {
@@ -67,6 +72,7 @@
           </button>
         {/each}
       </div>
+      <button class="nav-version num" onclick={() => (current = 'whatsnew')} title="What's new">v{APP_VERSION}</button>
     </nav>
     <div class="content scroll" id="tabpanel" role="tabpanel" tabindex="-1" aria-labelledby="tab-{current}">
       <button class="icon-btn close" aria-label="Close" onclick={() => (open = false)}><Icon name="x" size={16} /></button>
@@ -76,6 +82,8 @@
         <StorageTab />
       {:else if current === 'activity'}
         <ActivityTab />
+      {:else if current === 'whatsnew'}
+        <WhatsNewTab />
       {:else}
         <SettingsTab />
       {/if}
@@ -91,6 +99,8 @@
   }
 
   .nav {
+    display: flex;
+    flex-direction: column;
     width: 188px;
     flex: none;
     padding: 14px 8px;
@@ -111,6 +121,26 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
+  }
+
+  .nav-version {
+    align-self: flex-start;
+    margin: auto 10px 0;
+    padding: 2px 7px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text-3);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    transition:
+      color var(--dur-fast) var(--ease),
+      border-color var(--dur-fast) var(--ease);
+  }
+
+  .nav-version:hover {
+    color: var(--text);
+    border-color: var(--border-strong);
   }
 
   [role='tab'] {
@@ -173,7 +203,8 @@
       border-bottom: 1px solid var(--border);
     }
 
-    .nav-title {
+    .nav-title,
+    .nav-version {
       display: none;
     }
 

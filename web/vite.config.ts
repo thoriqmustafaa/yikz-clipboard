@@ -1,8 +1,19 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 
+function readVersion(): string {
+  const v = readFileSync(fileURLToPath(new URL('../VERSION', import.meta.url)), 'utf8').trim();
+  if (!/^\d+\.\d+\.\d+$/.test(v)) throw new Error(`VERSION file must contain MAJOR.MINOR.PATCH, got "${v}"`);
+  return v;
+}
+
 export default defineConfig({
   plugins: [svelte()],
+  define: {
+    __APP_VERSION__: JSON.stringify(readVersion())
+  },
   base: '/',
   build: {
     outDir: 'dist',

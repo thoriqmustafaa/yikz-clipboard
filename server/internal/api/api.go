@@ -20,6 +20,7 @@ import (
 	"github.com/thoriqmustafaa/yikz-clipboard/server/internal/apierr"
 	"github.com/thoriqmustafaa/yikz-clipboard/server/internal/hub"
 	"github.com/thoriqmustafaa/yikz-clipboard/server/internal/proto"
+	"github.com/thoriqmustafaa/yikz-clipboard/server/internal/release"
 	"github.com/thoriqmustafaa/yikz-clipboard/server/internal/service"
 	"github.com/thoriqmustafaa/yikz-clipboard/server/internal/store"
 )
@@ -31,15 +32,19 @@ type Options struct {
 	TrustedProxies []netip.Prefix
 	Logger         *slog.Logger
 	ServerVersion  string
+	Releases       *release.Store
+	ReleaseToken   string
 }
 
 type API struct {
-	svc     *service.Service
-	hub     *hub.Hub
-	webui   http.Handler
-	proxies []netip.Prefix
-	log     *slog.Logger
-	version string
+	svc          *service.Service
+	hub          *hub.Hub
+	webui        http.Handler
+	proxies      []netip.Prefix
+	log          *slog.Logger
+	version      string
+	releases     *release.Store
+	releaseToken string
 }
 
 func New(o Options) http.Handler {
@@ -49,7 +54,7 @@ func New(o Options) http.Handler {
 	if o.ServerVersion == "" {
 		o.ServerVersion = "1.0.0"
 	}
-	a := &API{svc: o.Service, hub: o.Hub, webui: o.WebUI, proxies: o.TrustedProxies, log: o.Logger, version: o.ServerVersion}
+	a := &API{svc: o.Service, hub: o.Hub, webui: o.WebUI, proxies: o.TrustedProxies, log: o.Logger, version: o.ServerVersion, releases: o.Releases, releaseToken: o.ReleaseToken}
 	mux := http.NewServeMux()
 	mux.Handle("/healthz", methods{http.MethodGet: a.healthz, http.MethodHead: a.healthz})
 	mux.Handle("/api/login", methods{http.MethodPost: a.login})
@@ -67,6 +72,12 @@ func New(o Options) http.Handler {
 	mux.Handle("/api/history", methods{http.MethodGet: a.auth(a.history)})
 	mux.Handle("/api/history/index", methods{http.MethodGet: a.auth(a.historyIndex)})
 	mux.Handle("/api/storage", methods{http.MethodGet: a.auth(a.storage)})
+	mux.Handle("/api/releases", methods{http.MethodGet: a.auth(a.listReleases)})
+	mux.Handle("/api/releases/latest", methods{http.MethodGet: a.auth(a.latestRelease)})
+	mux.Handle("/api/releases/{version}/assets/{file}", methods{http.MethodGet: a.auth(a.getReleaseAsset), http.MethodHead: a.auth(a.getReleaseAsset)})
+	mux.Handle("/api/admin/releases/{version}/assets/{file}", a.admin(methods{http.MethodPut: a.putReleaseAsset}.ServeHTTP))
+	mux.Handle("/api/admin/releases/{version}", a.admin(methods{http.MethodPut: a.putReleaseManifest}.ServeHTTP))
+	mux.Handle("/api/admin/", a.admin(routeNotFound))
 	mux.Handle("/api/", http.HandlerFunc(routeNotFound))
 	mux.Handle("/api", http.HandlerFunc(routeNotFound))
 	mux.Handle("/ws", methods{http.MethodGet: a.ws})

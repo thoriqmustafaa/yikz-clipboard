@@ -486,6 +486,11 @@ export interface StorageWarningMessage {
   min_free_disk_bytes: number;
 }
 
+export interface ReleaseAvailableMessage {
+  type: 'release_available';
+  version: string;
+}
+
 export interface ServerErrorMessage {
   type: 'error';
   code: string;
@@ -501,6 +506,7 @@ export type ServerMessage =
   | ClipDeletedMessage
   | ClipPinnedMessage
   | StorageWarningMessage
+  | ReleaseAvailableMessage
   | PingMessage
   | PongMessage
   | ServerErrorMessage;
@@ -574,6 +580,8 @@ export function parseServerMessage(input: string | unknown): ServerMessage | nul
         free_disk_bytes: int(o, 'free_disk_bytes'),
         min_free_disk_bytes: int(o, 'min_free_disk_bytes')
       };
+    case 'release_available':
+      return { type, version: str(o, 'version') };
     case 'ping':
       return { type, ts: int(o, 'ts') };
     case 'pong':

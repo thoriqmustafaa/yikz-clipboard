@@ -4,6 +4,7 @@
   import { session } from '../session.svelte';
   import { settings, type Theme } from '../settings.svelte';
   import { sync } from '../sync.svelte';
+  import { ui } from '../ui.svelte';
   import { APP_VERSION } from '../version';
   import ConfirmDialog from './ConfirmDialog.svelte';
   import Icon, { type IconName } from './Icon.svelte';
@@ -83,7 +84,10 @@
     <div><dt>Username</dt><dd>{session.username ?? 'Unknown'}</dd></div>
     <div><dt>This device</dt><dd>{session.deviceName || 'Unnamed'}</dd></div>
     <div><dt>Server version</dt><dd class="num">{sync.serverVersion || session.me?.server_version || 'Unknown'}</dd></div>
-    <div><dt>App version</dt><dd class="num">{APP_VERSION}</dd></div>
+    <div>
+      <dt>App version</dt>
+      <dd class="num">{APP_VERSION} <button class="link" onclick={() => ui.openPanel('whatsnew')}>What's new</button></dd>
+    </div>
   </dl>
   <div class="signout">
     <div class="label">
@@ -250,6 +254,20 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .link {
+    margin-left: 8px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--accent-text);
+    font-size: var(--text-sm);
+    font-weight: 550;
+  }
+
+  .link:hover {
+    text-decoration: underline;
   }
 
   .signout {

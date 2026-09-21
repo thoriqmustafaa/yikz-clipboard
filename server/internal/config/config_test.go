@@ -26,6 +26,22 @@ func TestDefaults(t *testing.T) {
 	if len(cfg.TrustedProxies) == 0 {
 		t.Fatal("no trusted proxies")
 	}
+	if cfg.ReleaseToken != "" || cfg.ReleasesKeep != 5 {
+		t.Fatalf("unexpected release defaults: %+v", cfg)
+	}
+}
+
+func TestReleaseConfig(t *testing.T) {
+	cfg, err := FromLookup(lookup(map[string]string{"CC_USERNAME": "u", "CC_PASSWORD": "12345678", "CC_RELEASE_TOKEN": " secret-token ", "CC_RELEASES_KEEP": "3"}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.ReleaseToken != "secret-token" || cfg.ReleasesKeep != 3 {
+		t.Fatalf("unexpected: %+v", cfg)
+	}
+	if _, err := FromLookup(lookup(map[string]string{"CC_USERNAME": "u", "CC_PASSWORD": "12345678", "CC_RELEASES_KEEP": "0"})); err == nil || !strings.Contains(err.Error(), "CC_RELEASES_KEEP") {
+		t.Fatalf("expected CC_RELEASES_KEEP error, got %v", err)
+	}
 }
 
 func TestOverrides(t *testing.T) {

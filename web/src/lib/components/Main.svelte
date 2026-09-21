@@ -4,6 +4,7 @@
   import { filterItems, flatten, groupItems } from '../listing';
   import { modKey } from '../platform';
   import { sync } from '../sync.svelte';
+  import { ui } from '../ui.svelte';
   import { uploads } from '../uploads.svelte';
   import { formatBytes } from '../format';
   import ComposeDialog from './ComposeDialog.svelte';
@@ -75,6 +76,14 @@
 
   $effect(() => {
     if (sheetOpen && !selected) sheetOpen = false;
+  });
+
+  $effect(() => {
+    const req = ui.panelRequest;
+    if (req) {
+      panelTab = req;
+      ui.panelRequest = null;
+    }
   });
 
   function select(item: CachedItem, openSheet = false) {
